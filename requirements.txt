@@ -1,0 +1,7 @@
+matplotlib-inline==0.2.2
+numpy==2.5.0
+opencv-contrib-python==4.13.0.92
+opencv-python==4.13.0.92
+pandas==2.3.0
+
+
