@@ -1,0 +1,72 @@
+@startuml diagrama-sequencia
+skinparam shadowing false
+skinparam dpi 130
+skinparam backgroundColor white
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+title Diagrama de sequência — processamento de um vídeo
+
+actor Piloto
+participant "leitor.py" as L
+participant "cv.VideoCapture" as Cap
+participant "OpenCV" as CV
+participant "EasyOCR\nReader(pt, en)" as OCR
+participant "NumPy" as NP
+participant "Matplotlib" as PLT
+
+Piloto -> L: --video, --config, --confianca
+activate L
+L -> L: escolhe o preset ou o JSON
+L -> OCR: cria o leitor
+L -> Cap: VideoCapture(video)
+activate Cap
+L -> Cap: CAP_PROP_FPS
+Cap --> L: fps, ou 30 se inválido
+L -> L: dt = 1/fps
+
+loop a cada quadro
+  Cap --> L: ret, frame
+  L -> CV: cvtColor(frame, COLOR_BGR2HSV)
+  CV --> L: frameHSV
+  L -> CV: inRange verde no recorte do preset
+  CV --> L: máscara do acelerador
+  L -> CV: countNonZero(máscara do acelerador)
+  CV --> L: pixels do acelerador
+  L -> NP: append(acelerador)
+  L -> CV: inRange rosa HSV até matiz 179
+  CV --> L: máscara do freio
+  L -> CV: countNonZero(máscara do freio)
+  CV --> L: pixels do freio
+  L -> NP: append(freio)
+  L -> CV: recorte da velocidade em RGB
+  CV --> L: roi da velocidade
+  L -> OCR: readtext(roi)
+  OCR --> L: (bbox, texto, confiança)
+  L -> L: se confiança > limiar e texto.isdigit(),\nvelocidade = int(texto);\nsem aceite, a velocidade permanece
+  L -> L: distancia += (velocidade / 3.6) * dt
+  L -> NP: append(distancia_total)
+end
+L -> Cap: release()
+deactivate Cap
+
+L -> NP: max(acelerador)
+NP --> L: máximo do acelerador
+L -> L: acelerador = (valor / máximo) * 100
+L -> PLT: plot(distancia_total, acelerador, verde)
+L -> NP: max(freio)
+NP --> L: máximo do freio
+L -> L: freio = (valor / máximo) * 100
+L -> PLT: plot(distancia_total, freio, vermelho)
+L -> PLT: dark_background, fill_between,\ngrade, título e eixos
+alt headless
+  L -> PLT: savefig(png)
+else janela
+  L -> PLT: show()
+  PLT --> Piloto: janela do gráfico
+end
+opt csv pedido
+  L -> L: grava tempo, distância,\nvelocidade e percentuais
+end
+deactivate L
+@enduml

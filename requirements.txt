@@ -1,7 +1,19 @@
-matplotlib-inline==0.2.2
+# Dependências diretas de leitor.py (verificadas com Python 3.12).
+# matplotlib e easyocr são importados pelo script e passam a ser declarados aqui.
+#
+# opencv-python-headless fornece o módulo cv2 na mesma linha 4.13.0.92 que já
+# estava fixada. O script só usa VideoCapture, cvtColor, inRange e countNonZero,
+# sem janela do OpenCV. O EasyOCR depende deste pacote headless. opencv-python
+# e opencv-contrib-python foram retirados: nenhum módulo exclusivo do contrib é
+# chamado, e mais de um pacote que instala cv2 no mesmo ambiente quebra a importação.
+#
+# pandas e matplotlib-inline foram retirados. O script não importa pandas
+# (as séries ficam em arrays NumPy) e não roda dentro do Jupyter: a figura
+# é aberta com matplotlib.pyplot.show().
+#
+# O EasyOCR instala PyTorch, torchvision e outras bibliotecas transitivas.
+# A primeira execução ainda baixa os modelos de OCR para ~/.EasyOCR/model.
 numpy==2.5.0
-opencv-contrib-python==4.13.0.92
-opencv-python==4.13.0.92
-pandas==2.3.0
-
-
+opencv-python-headless==4.13.0.92
+matplotlib==3.10.7
+easyocr==1.7.2
