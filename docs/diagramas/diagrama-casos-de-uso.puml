@@ -17,13 +17,15 @@ rectangle "Leitor de telemetria" {
   together {
     usecase "Segmentar o acelerador\n(máscara HSV verde)" as UC2
     usecase "Segmentar o freio\n(máscara HSV rosa)" as UC3
-    usecase "Reconhecer a velocidade\n(dígitos, confiança > 0,5)" as UC4
+    usecase "Reconhecer a velocidade\n(dígitos, confiança configurável)" as UC4
   }
   together {
-    usecase "Integrar a distância\n(passo fixo de 0,033 s)" as UC5
+    usecase "Integrar a distância\n(passo 1/fps do vídeo)" as UC5
     usecase "Normalizar cada barra\npelo máximo da gravação" as UC6
     usecase "Exibir o gráfico\npercentual por distância" as UC7
   }
+  usecase "Gravar o gráfico em PNG" as UC8
+  usecase "Exportar a série em CSV" as UC9
 }
 
 piloto --> UC1
@@ -36,4 +38,6 @@ UC1 ..> UC4 : <<include>>
 UC1 ..> UC5 : <<include>>
 UC1 ..> UC6 : <<include>>
 UC1 ..> UC7 : <<include>>
+UC8 ..> UC7 : <<extend>>
+UC9 ..> UC1 : <<extend>>
 @enduml

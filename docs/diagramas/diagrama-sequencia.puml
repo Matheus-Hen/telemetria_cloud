@@ -15,34 +15,40 @@ participant "EasyOCR\nReader(pt, en)" as OCR
 participant "NumPy" as NP
 participant "Matplotlib" as PLT
 
-Piloto -> L: python leitor.py
+Piloto -> L: --video, --config, --confianca
 activate L
+L -> L: escolhe o preset ou o JSON
 L -> OCR: cria o leitor
-L -> Cap: VideoCapture("test_telemetria.mp4")
+L -> Cap: VideoCapture(video)
 activate Cap
+L -> Cap: CAP_PROP_FPS
+Cap --> L: fps, ou 30 se inválido
+L -> L: dt = 1/fps
 
 loop a cada quadro
   Cap --> L: ret, frame
   L -> CV: cvtColor(frame, COLOR_BGR2HSV)
   CV --> L: frameHSV
-  L -> CV: inRange verde [585:690, 1053:1095]
+  L -> CV: inRange verde no recorte do preset
   CV --> L: máscara do acelerador
   L -> CV: countNonZero(máscara do acelerador)
   CV --> L: pixels do acelerador
   L -> NP: append(acelerador)
-  L -> CV: inRange rosa [575:677, 1053:1095]
+  L -> CV: inRange rosa HSV até matiz 179
   CV --> L: máscara do freio
   L -> CV: countNonZero(máscara do freio)
   CV --> L: pixels do freio
   L -> NP: append(freio)
-  L -> CV: recorte [610:640, 1128:1212] em RGB
+  L -> CV: recorte da velocidade em RGB
   CV --> L: roi da velocidade
   L -> OCR: readtext(roi)
   OCR --> L: (bbox, texto, confiança)
-  L -> L: se confiança > 0.5 e texto.isdigit(),\nvelocidade = int(texto);\no último aceite do quadro prevalece
-  L -> L: distancia += (velocidade / 3.6) * 0.033
+  L -> L: se confiança > limiar e texto.isdigit(),\nvelocidade = int(texto);\nsem aceite, a velocidade permanece
+  L -> L: distancia += (velocidade / 3.6) * dt
   L -> NP: append(distancia_total)
 end
+L -> Cap: release()
+deactivate Cap
 
 L -> NP: max(acelerador)
 NP --> L: máximo do acelerador
@@ -53,17 +59,14 @@ NP --> L: máximo do freio
 L -> L: freio = (valor / máximo) * 100
 L -> PLT: plot(distancia_total, freio, vermelho)
 L -> PLT: dark_background, fill_between,\ngrade, título e eixos
-L -> PLT: show()
-activate PLT
-PLT --> Piloto: janela do gráfico
-Piloto -> PLT: fecha a janela
-deactivate PLT
-L -> Cap: release()
-deactivate Cap
+alt headless
+  L -> PLT: savefig(png)
+else janela
+  L -> PLT: show()
+  PLT --> Piloto: janela do gráfico
+end
+opt csv pedido
+  L -> L: grava tempo, distância,\nvelocidade e percentuais
+end
 deactivate L
-
-note over L
-  O laço termina quando read() não devolve quadro.
-  Sem texto aceito, a velocidade anterior permanece.
-end note
 @enduml

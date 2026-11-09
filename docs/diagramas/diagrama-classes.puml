@@ -44,14 +44,14 @@ class LeitorDeVelocidade {
   idiomas = pt, en
   linhas = 610:640
   colunas = 1128:1212
-  confiancaMinima = 0.5
+  confiancaMinima = argumento (padrão 0.5)
   ler(quadroBGR): int ou nenhum
 }
 
 class IntegradorDeDistancia {
   velocidadeKmh: int = 0
   distanciaM: float = 0
-  passoSegundos = 0.033
+  passoSegundos = 1/fps (reserva 30)
   avancar(): float
 }
 
@@ -69,7 +69,7 @@ class GraficoDeTelemetria {
   eixoY = "% aceleração/freio"
   tracarAcelerador()
   tracarFreio()
-  exibir()
+  exibir() ou gravarPng()
 }
 
 LeitorTelemetria --> CapturaDeVideo : lê
@@ -90,12 +90,12 @@ note bottom of DetectorDeBarra
   Acelerador (verde): linhas 585:690,
   colunas 1053:1095,
   HSV [35, 40, 40] a [85, 255, 255].
-  Freio (rosa): linhas 575:677,
-  colunas 1053:1095,
-  HSV [140, 100, 100] a [168, 255, 255].
-  Mesmas colunas; sobreposição nas
-  linhas 585:677. A cor separa as barras.
-  Há dois detectores, um por série.
+  Freio (rosa), nos dois presets:
+  HSV [140, 80, 80] a [179, 255, 255].
+  Preset original: mesmas colunas.
+  Preset lmu_default_1080p: freio à
+  esquerda do acelerador, no dial.
+  O arco de RPM pode contaminar o freio.
 end note
 
 note bottom of LeitorDeVelocidade
@@ -107,11 +107,10 @@ note bottom of LeitorDeVelocidade
 end note
 
 note bottom of IntegradorDeDistancia
-  distanciaM += (velocidadeKmh / 3.6)
-  × 0.033 a cada quadro.
-  O passo não é lido do vídeo.
-  Antes da primeira leitura aceita,
-  velocidadeKmh permanece 0.
+  distanciaM += (velocidadeKmh / 3.6) × (1/fps).
+  fps vem de CAP_PROP_FPS; sem taxa
+  válida, vale 30. Sem leitura aceita,
+  velocidadeKmh não muda.
 end note
 
 note bottom of SerieTemporal

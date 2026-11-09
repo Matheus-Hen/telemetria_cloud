@@ -6,40 +6,46 @@ skinparam backgroundColor white
 title Diagrama de atividades — leitor.py
 
 start
+:Escolher o preset ou o JSON\ne o limiar de confiança;
 :Criar o leitor EasyOCR\ncom os idiomas pt e en;
-:Zerar velocidade e distância\ne criar as três séries vazias;
-:Abrir test_telemetria.mp4;
+:Abrir o vídeo e ler CAP_PROP_FPS\n(se inválido, usar 30);
+:dt = 1/fps;\nzerar velocidade e distância;
 
 while (cap.read() devolveu um quadro?) is (sim)
   :Converter o quadro de BGR para HSV;
-  :Mascarar o verde no recorte do acelerador\nlinhas 585:690, colunas 1053:1095\nHSV [35, 40, 40] a [85, 255, 255];
-  :Anexar countNonZero à série do acelerador;
-  :Mascarar o rosa no recorte do freio\nlinhas 575:677, colunas 1053:1095\nHSV [140, 100, 100] a [168, 255, 255];
-  :Anexar countNonZero à série do freio;
-  :Recortar a velocidade\nlinhas 610:640, colunas 1128:1212\ne converter de BGR para RGB;
+  :Mascarar o verde no recorte do acelerador\nHSV [35, 40, 40] a [85, 255, 255];
+  :Anexar a contagem de pixels do acelerador;
+  :Mascarar o rosa no recorte do freio\nHSV [140, 80, 80] a [179, 255, 255];
+  :Anexar a contagem de pixels do freio;
+  :Recortar a velocidade do preset\ne converter de BGR para RGB;
   :Reconhecer o texto com EasyOCR;
-  if (há resultado com confiança > 0,5\ne texto só de dígitos?) then (sim)
+  if (há resultado com confiança acima do limiar\ne texto só de dígitos?) then (sim)
     :velocidade = inteiro do último\nresultado aceito nesse quadro;
   else (não)
     :A velocidade armazenada permanece\n(0 até a primeira leitura aceita);
   endif
-  :distância = distância + (velocidade / 3,6) × 0,033;
+  :distância = distância + (velocidade / 3,6) × dt;
   :Anexar a distância à série;
 endwhile (não)
-
-:acelerador = (acelerador / máximo) × 100;
-note right
-  Vídeo sem quadros ou máximo igual a 0
-  interrompe o script nessa normalização.
-  O percentual é relativo ao pico da
-  própria gravação, não a uma escala
-  calibrada do pedal.
-end note
-:Traçar o acelerador em verde\ncontra a distância;
-:freio = (freio / máximo) × 100;
-:Traçar o freio em vermelho\ncontra a distância;
-:Aplicar fundo escuro, preenchimento,\ngrade e os rótulos do gráfico;
-:Exibir o gráfico e aguardar\no fechamento da janela;
 :Liberar o arquivo de vídeo;
+
+:acelerador e freio =\n(contagem / máximo) × 100;
+note right
+  Máximo igual a 0 vira percentual 0.
+  O percentual é o pico da gravação,
+  não a altura cheia do pedal.
+  O arco vermelho de RPM pode
+  contaminar a máscara do freio.
+end note
+:Traçar acelerador (verde) e freio (vermelho)\ncontra a distância, com fundo escuro;
+if (execução headless?) then (sim)
+  :Gravar o gráfico em PNG;
+else (não)
+  :Exibir o gráfico e aguardar\no fechamento da janela;
+endif
+if (CSV pedido?) then (sim)
+  :Gravar tempo, distância, velocidade\ne percentuais;
+else (não)
+endif
 stop
 @enduml
