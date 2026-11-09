@@ -1,0 +1,69 @@
+@startuml diagrama-sequencia
+skinparam shadowing false
+skinparam dpi 130
+skinparam backgroundColor white
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+title Diagrama de sequência — processamento de um vídeo
+
+actor Piloto
+participant "leitor.py" as L
+participant "cv.VideoCapture" as Cap
+participant "OpenCV" as CV
+participant "EasyOCR\nReader(pt, en)" as OCR
+participant "NumPy" as NP
+participant "Matplotlib" as PLT
+
+Piloto -> L: python leitor.py
+activate L
+L -> OCR: cria o leitor
+L -> Cap: VideoCapture("test_telemetria.mp4")
+activate Cap
+
+loop a cada quadro
+  Cap --> L: ret, frame
+  L -> CV: cvtColor(frame, COLOR_BGR2HSV)
+  CV --> L: frameHSV
+  L -> CV: inRange verde [585:690, 1053:1095]
+  CV --> L: máscara do acelerador
+  L -> CV: countNonZero(máscara do acelerador)
+  CV --> L: pixels do acelerador
+  L -> NP: append(acelerador)
+  L -> CV: inRange rosa [575:677, 1053:1095]
+  CV --> L: máscara do freio
+  L -> CV: countNonZero(máscara do freio)
+  CV --> L: pixels do freio
+  L -> NP: append(freio)
+  L -> CV: recorte [610:640, 1128:1212] em RGB
+  CV --> L: roi da velocidade
+  L -> OCR: readtext(roi)
+  OCR --> L: (bbox, texto, confiança)
+  L -> L: se confiança > 0.5 e texto.isdigit(),\nvelocidade = int(texto);\no último aceite do quadro prevalece
+  L -> L: distancia += (velocidade / 3.6) * 0.033
+  L -> NP: append(distancia_total)
+end
+
+L -> NP: max(acelerador)
+NP --> L: máximo do acelerador
+L -> L: acelerador = (valor / máximo) * 100
+L -> PLT: plot(distancia_total, acelerador, verde)
+L -> NP: max(freio)
+NP --> L: máximo do freio
+L -> L: freio = (valor / máximo) * 100
+L -> PLT: plot(distancia_total, freio, vermelho)
+L -> PLT: dark_background, fill_between,\ngrade, título e eixos
+L -> PLT: show()
+activate PLT
+PLT --> Piloto: janela do gráfico
+Piloto -> PLT: fecha a janela
+deactivate PLT
+L -> Cap: release()
+deactivate Cap
+deactivate L
+
+note over L
+  O laço termina quando read() não devolve quadro.
+  Sem texto aceito, a velocidade anterior permanece.
+end note
+@enduml
