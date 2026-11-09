@@ -4,7 +4,7 @@ Pilotos de sim racing que usam um serviço de cloud gaming jogam num servidor re
 
 Este script existe para esse piloto montar a própria telemetria e analisar o desempenho a partir só desse vídeo. Ele mede as barras de acelerador e de freio pela cor, reconhece a velocidade numérica e acumula a distância. O `cloud` do nome do repositório (`telemetria_cloud`) designa esse cenário: telemetria reconstruída quando Le Mans Ultimate está na nuvem.
 
-O programa não entra na conta do GeForce NOW e não conversa com o processo do jogo. A entrada é um arquivo de vídeo da transmissão, já gravado. O autor confirmou que esses vídeos são gravados do GeForce NOW em 1080p (1920×1080) e que os recortes do HUD foram medidos nessa resolução. O repositório é a parte prática de um TCC. Este README descreve o que o código faz hoje, com detalhe suficiente para outra pessoa repetir o processamento. Faixas de cor, limiar do OCR e o passo de tempo continuam lidos do código e seguem marcados para revisão.
+O programa não entra na conta do GeForce NOW e não conversa com o processo do jogo. A entrada é um arquivo de vídeo da transmissão, já gravado. O autor confirmou que esses vídeos são gravados do GeForce NOW em 1080p (1920×1080), a 30 quadros por segundo, e que os recortes do HUD foram medidos nessa resolução. O passo de 0,033 s corresponde a esse período. O repositório é a parte prática de um TCC. Este README descreve o que o código faz hoje, com detalhe suficiente para outra pessoa repetir o processamento. Faixas de cor e limiar do OCR continuam lidos do código e seguem marcados para revisão.
 
 ## Público-alvo
 
@@ -41,7 +41,7 @@ A entrada esperada é um vídeo do HUD de Le Mans Ultimate gravado do GeForce NO
       distancia = distancia + (velocidade / 3.6) * 0.033
       ```
 
-      `velocidade / 3.6` converte km/h para m/s. `0.033` é um passo de tempo fixo, em segundos, aplicado a todo quadro. O script não lê a taxa de quadros do arquivo (`CAP_PROP_FPS`).
+      `velocidade / 3.6` converte km/h para m/s. `0.033` é o período de um quadro, em segundos. O autor confirmou que as gravações têm 30 fps e que esse valor corresponde a essa taxa. O script não consulta `CAP_PROP_FPS`: o número está fixo no código.
 5. Depois do último quadro, divide a série do acelerador pelo máximo dela e multiplica por 100. Desenha essa curva em verde contra `distancia_total`.
 6. Repete a normalização para o freio e desenha a curva em vermelho.
 7. Aplica o estilo `dark_background`, preenche a área sob as curvas (alfa 0,3), liga a grade (alfa 0,2) e define título e eixos.
@@ -76,7 +76,7 @@ O texto desta seção é uma justificativa reconstruída a partir do que o scrip
 
 ## Requisitos
 
-Há dois blocos. O bloco do problema e do público registra o que o autor informou sobre para quem o trabalho existe. O bloco seguinte descreve o comportamento atual de `leitor.py`. Os valores de recorte, HSV, confiança e passo de tempo foram lidos do código e devem ser revisados antes de entrarem no TCC como especificação fechada.
+Há dois blocos. O bloco do problema e do público registra o que o autor informou sobre para quem o trabalho existe. O bloco seguinte descreve o comportamento atual de `leitor.py`. Resolução, recortes e o passo de 0,033 s (30 fps) foram confirmados pelo autor. As faixas HSV e o limiar de confiança foram lidos do código e devem ser revisados antes de entrarem no TCC como especificação fechada.
 
 ### Problema e público
 
@@ -95,7 +95,7 @@ Estes itens são o modo como o script cumpre a extração descrita em RP03.
 - **RF04.** O sistema lê a velocidade no recorte linhas 610:640 e colunas 1128:1212 com OCR em português e inglês, e aceita somente texto formado só por dígitos com confiança maior que 0,5.
 - **RF05.** Quando o quadro não produz leitura aceita, o sistema conserva a última velocidade aceita. Até a primeira leitura aceita, a velocidade usada é 0.
 - **RF06.** Se o OCR devolve mais de um texto aceito no mesmo quadro, o sistema fica com o último item dessa lista.
-- **RF07.** A cada quadro, o sistema soma à distância `(velocidade_em_km/h / 3,6) * 0,033` metros.
+- **RF07.** A cada quadro, o sistema soma à distância `(velocidade_em_km/h / 3,6) * 0,033` metros. As gravações confirmadas têm 30 fps, e 0,033 s é o período de quadro correspondente.
 - **RF08.** Ao terminar o vídeo, o sistema converte cada série de pixels em percentual do máximo da própria série.
 - **RF09.** O sistema exibe um gráfico de linha do percentual do acelerador (verde) e do freio (vermelho) em função da distância, com o título `Telemetria`, o eixo horizontal `Distância (m)` e o eixo vertical `% aceleração/freio`.
 
@@ -106,7 +106,7 @@ Estes itens são o modo como o script cumpre a extração descrita em RP03.
 - **RNF03.** A única saída é a janela do Matplotlib. O script não grava PNG, CSV nem outro arquivo de resultado. A série usada na análise existe só enquanto a janela está aberta.
 - **RNF04.** A instalação é a lista fixada em `requirements.txt`. O OCR acrescenta o download dos modelos na primeira execução.
 - **RNF05.** O tempo de cada quadro inclui uma chamada de OCR. O hardware disponível para o PyTorch (CPU ou GPU) determina esse tempo.
-- **RNF06.** O resultado numérico foi definido para gravação do GeForce NOW em 1920×1080, com os recortes medidos nessa resolução, e para uma duração de quadro compatível com 0,033 s. Outra resolução, outra escala da janela ou outro cliente desloca o HUD. A compressão do stream altera cor e nitidez dos dígitos.
+- **RNF06.** O resultado numérico foi definido para gravação do GeForce NOW em 1920×1080 e 30 fps, com os recortes medidos nessa resolução e com o passo de 0,033 s por quadro. Outra resolução, outra taxa de quadros, outra escala da janela ou outro cliente desloca o resultado. A compressão do stream altera cor e nitidez dos dígitos.
 
 ### Fora do que o código faz hoje
 
@@ -127,7 +127,7 @@ No Debian/Ubuntu, se `python3 -m venv` avisar que o `ensurepip` não está dispo
 
 ## Vídeo de entrada
 
-A entrada esperada é um vídeo do HUD de Le Mans Ultimate gravado do GeForce NOW em 1080p (1920×1080). O autor confirmou essa resolução e confirmou que os recortes foram medidos nela. O script não captura a transmissão sozinho. Um caminho reproduzível é: jogar Le Mans Ultimate no GeForce NOW com a sessão em 1920×1080, gravar essa imagem e exportar o trecho em que o HUD de acelerador, freio e velocidade está visível, sem redimensionar o quadro.
+A entrada esperada é um vídeo do HUD de Le Mans Ultimate gravado do GeForce NOW em 1080p (1920×1080) a 30 fps. O autor confirmou essa resolução, essa taxa de quadros e que os recortes foram medidos nesse quadro. O passo de 0,033 s corresponde aos 30 fps. O script não captura a transmissão sozinho. Um caminho reproduzível é: jogar Le Mans Ultimate no GeForce NOW com a sessão em 1920×1080 a 30 fps, gravar essa imagem e exportar o trecho em que o HUD de acelerador, freio e velocidade está visível, sem redimensionar o quadro nem alterar a taxa.
 
 O arquivo de entrada não está no Git. `.gitignore` ignora `test_telemetria.mp4` e nomes com esse prefixo. Coloque a gravação no diretório de onde o script será executado, com este nome exato:
 
@@ -183,7 +183,7 @@ O arquivo de vídeo só é liberado depois que essa janela fecha. Nada é gravad
 - O script não abre a sessão na nuvem. Sem um arquivo já gravado, não há o que processar.
 - Compressão e bitrate do GeForce NOW mudam a cor das barras e a nitidez dos dígitos. Os limiares HSV e o OCR foram ajustados ao HUD de Le Mans Ultimate nessa gravação de 1920×1080.
 - Os recortes e as cores são constantes, medidos em 1080p. Outra resolução ou outra escala da janela do GeForce NOW invalida a leitura sem um erro explicativo.
-- O passo de 0,033 s aproxima o período de 30 quadros por segundo (1/30 ≈ 0,0333). Em um vídeo de 60 fps a distância fica cerca do dobro da distância real, porque o código não consulta a taxa do arquivo.
+- O passo de 0,033 s corresponde aos 30 fps confirmados das gravações. O script não lê a taxa do arquivo, então uma gravação em outra taxa muda a distância na mesma proporção.
 - A velocidade rejeitada não zera o valor: um dígito lido uma vez continua valendo nos quadros seguintes em que o OCR falha.
 - `text.isdigit()` descarta leituras com erro típico de OCR que mistura letra e número.
 - O percentual 100% é o máximo da própria gravação. Duas gravações com o mesmo pedal físico podem produzir curvas diferentes se o pico de pixels não for o mesmo. Acelerador e freio também não compartilham o mesmo máximo: cada um é normalizado pela própria série, e as caixas têm alturas diferentes (105 e 102 pixels).
@@ -198,10 +198,9 @@ Os quatro diagramas UML pedidos na metodologia do trabalho prático estão em [`
 
 ## O que o autor precisa revisar
 
-- A redação de RP01–RP04, para o tom do TCC. O conteúdo desse bloco segue o que o autor descreveu. Já estão confirmados o jogo (Le Mans Ultimate), o cliente (GeForce NOW) e a resolução em que os recortes foram medidos (1920×1080).
+- A redação de RP01–RP04, para o tom do TCC. O conteúdo desse bloco segue o que o autor descreveu. Já estão confirmados o jogo (Le Mans Ultimate), o cliente (GeForce NOW), a resolução em que os recortes foram medidos (1920×1080) e a taxa de 30 fps, à qual corresponde o passo de 0,033 s.
 - A seção de justificativa das ferramentas, para que ela descreva a escolha que de fato foi feita.
 - As faixas HSV e o limiar de confiança do OCR. Esses números estão no código e ainda não foram confirmados como escolha de projeto.
 - Se a análise de desempenho precisa da série gravada em arquivo. Hoje o resultado é só a janela do gráfico.
-- Se 0,033 s é o período real dos quadros dessa gravação.
 - Se o percentual relativo ao máximo da gravação é a grandeza que o gráfico deve mostrar, ou se a escala deveria ser a altura cheia da barra.
 - Os parágrafos em `docs/diagramas/README.md` antes de colá-los na Metodologia (numeração de figuras e fonte, no padrão ABNT adotado no trabalho).
