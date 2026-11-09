@@ -1,14 +1,14 @@
 # Leitor de telemetria a partir do vídeo de sim racing na nuvem
 
-Pilotos de sim racing que usam um serviço de cloud gaming jogam num servidor remoto. O jogo para o qual este leitor foi feito é **Le Mans Ultimate**. É o caso de quem o joga, por exemplo, pela NVIDIA GeForce NOW ou pelo Xbox Cloud Gaming (xCloud). Na máquina do piloto chega o vídeo transmitido, com o painel (HUD) de Le Mans Ultimate desenhado na imagem. A telemetria nativa do simulador — API, pacote de rede ou arquivo que um jogo instalado localmente escreveria — permanece no servidor do serviço.
+Pilotos de sim racing que usam um serviço de cloud gaming jogam num servidor remoto. O jogo para o qual este leitor foi feito é **Le Mans Ultimate**, jogado no GeForce NOW. Na máquina do piloto chega o vídeo transmitido, com o painel (HUD) de Le Mans Ultimate desenhado na imagem. A telemetria nativa do simulador — API, pacote de rede ou arquivo que um jogo instalado localmente escreveria — permanece no servidor do serviço.
 
 Este script existe para esse piloto montar a própria telemetria e analisar o desempenho a partir só desse vídeo. Ele mede as barras de acelerador e de freio pela cor, reconhece a velocidade numérica e acumula a distância. O `cloud` do nome do repositório (`telemetria_cloud`) designa esse cenário: telemetria reconstruída quando Le Mans Ultimate está na nuvem.
 
-O programa não entra na conta do GeForce NOW, do xCloud nem de outro serviço, e não conversa com o processo do jogo. A entrada é um arquivo de vídeo da transmissão, já gravado. O repositório é a parte prática de um TCC. Este README descreve o que o código faz hoje, com detalhe suficiente para outra pessoa repetir o processamento. O público e o problema desta seção foram informados pelo autor. Números de recorte, faixas de cor e o passo de tempo continuam lidos do código e seguem marcados para revisão.
+O programa não entra na conta do GeForce NOW e não conversa com o processo do jogo. A entrada é um arquivo de vídeo da transmissão, já gravado. O autor confirmou que esses vídeos são gravados do GeForce NOW em 1080p (1920×1080) e que os recortes do HUD foram medidos nessa resolução. O repositório é a parte prática de um TCC. Este README descreve o que o código faz hoje, com detalhe suficiente para outra pessoa repetir o processamento. Faixas de cor, limiar do OCR e o passo de tempo continuam lidos do código e seguem marcados para revisão.
 
 ## Público-alvo
 
-Pilotos de Le Mans Ultimate que disputam a sessão por um serviço de jogo na nuvem e usam o vídeo transmitido para analisar a própria pilotagem. Os serviços citados pelo autor são a NVIDIA GeForce NOW e o Xbox Cloud Gaming (xCloud). O mesmo enquadramento vale para um serviço equivalente em que o jogo roda no servidor e a telemetria de Le Mans Ultimate não é entregue ao computador do piloto.
+Pilotos de Le Mans Ultimate que disputam a sessão no GeForce NOW e usam o vídeo transmitido para analisar a própria pilotagem. O jogo roda no servidor da NVIDIA, e a telemetria de Le Mans Ultimate não chega ao computador do piloto. O mesmo tipo de restrição aparece em outros serviços de cloud gaming, como o Xbox Cloud Gaming (xCloud); os recortes deste repositório, porém, foram medidos em gravação do GeForce NOW.
 
 ## Objetivo
 
@@ -20,7 +20,7 @@ Oferecer a esse piloto uma telemetria própria de análise de desempenho, extra�
 
 A velocidade é acumulada em distância. No fim, o script abre um gráfico com o percentual de cada barra no eixo vertical e a distância, em metros, no eixo horizontal. Essa figura é o artefato de análise que o código produz hoje. A série numérica não é gravada em arquivo.
 
-A entrada esperada é um vídeo do HUD de Le Mans Ultimate capturado da transmissão do cloud gaming. O nome do jogo não aparece em `leitor.py`: o script só abre `test_telemetria.mp4`, e os recortes foram medidos para esse painel. O autor ainda precisa confirmar qual cliente de nuvem e qual resolução foram usados nessa medição.
+A entrada esperada é um vídeo do HUD de Le Mans Ultimate gravado do GeForce NOW em 1080p (1920×1080). O autor confirmou essa origem e confirmou que os recortes foram medidos em quadros dessa resolução. O nome do jogo e o do serviço não aparecem em `leitor.py`: o script só abre `test_telemetria.mp4`.
 
 ## Como funciona
 
@@ -80,16 +80,16 @@ Há dois blocos. O bloco do problema e do público registra o que o autor inform
 
 ### Problema e público
 
-- **RP01.** O público-alvo são pilotos de sim racing que jogam por serviço de cloud gaming, como a NVIDIA GeForce NOW e o Xbox Cloud Gaming (xCloud), ou por um serviço equivalente com a mesma restrição.
+- **RP01.** O público-alvo são pilotos de Le Mans Ultimate no GeForce NOW. A telemetria nativa do jogo permanece no servidor remoto, como também ocorre em outros serviços de cloud gaming.
 - **RP02.** O jogo executa em servidor remoto. A telemetria nativa do simulador não está disponível na máquina do piloto, e o sistema não depende dela.
-- **RP03.** A fonte de dados é o vídeo do HUD de Le Mans Ultimate capturado da transmissão do cloud gaming. O sistema extrai acelerador, freio e velocidade desse painel para o piloto compor a própria telemetria e analisar o desempenho ao longo da distância percorrida.
+- **RP03.** A fonte de dados é o vídeo do HUD de Le Mans Ultimate gravado do GeForce NOW em 1080p (1920×1080). Os recortes foram medidos nessa resolução. O sistema extrai acelerador, freio e velocidade desse painel para o piloto compor a própria telemetria e analisar o desempenho ao longo da distância percorrida.
 - **RP04.** Nesta versão, a transmissão entra como arquivo de vídeo já gravado. O sistema não autentica no serviço de nuvem, não abre a sessão ao vivo e não se comunica com o processo do jogo.
 
 ### Requisitos funcionais
 
 Estes itens são o modo como o script cumpre a extração descrita em RP03.
 
-- **RF01.** O sistema abre, no diretório de trabalho, o arquivo `test_telemetria.mp4` com a gravação do HUD de Le Mans Ultimate capturada do stream de cloud gaming.
+- **RF01.** O sistema abre, no diretório de trabalho, o arquivo `test_telemetria.mp4` com a gravação do HUD de Le Mans Ultimate feita no GeForce NOW em 1920×1080.
 - **RF02.** Para cada quadro lido, o sistema estima a intensidade do acelerador pela quantidade de pixels verdes no recorte fixo linhas 585:690 e colunas 1053:1095, com HSV de `[35, 40, 40]` a `[85, 255, 255]`.
 - **RF03.** Para cada quadro lido, o sistema estima a intensidade do freio pela quantidade de pixels rosa no recorte fixo linhas 575:677 e colunas 1053:1095, com HSV de `[140, 100, 100]` a `[168, 255, 255]`.
 - **RF04.** O sistema lê a velocidade no recorte linhas 610:640 e colunas 1128:1212 com OCR em português e inglês, e aceita somente texto formado só por dígitos com confiança maior que 0,5.
@@ -101,12 +101,12 @@ Estes itens são o modo como o script cumpre a extração descrita em RP03.
 
 ### Requisitos não funcionais
 
-- **RNF01.** O processamento dos quadros ocorre na máquina do piloto, em um único processo, sem parâmetros de linha de comando e sem arquivo de configuração. Nenhuma credencial de GeForce NOW, xCloud ou outro serviço é necessária, porque a entrada já é o vídeo.
+- **RNF01.** O processamento dos quadros ocorre na máquina do piloto, em um único processo, sem parâmetros de linha de comando e sem arquivo de configuração. Nenhuma credencial do GeForce NOW é necessária, porque a entrada já é o vídeo gravado.
 - **RNF02.** Recortes, faixas HSV, idiomas do OCR, limiar de confiança e passo de tempo são constantes no código-fonte.
 - **RNF03.** A única saída é a janela do Matplotlib. O script não grava PNG, CSV nem outro arquivo de resultado. A série usada na análise existe só enquanto a janela está aberta.
 - **RNF04.** A instalação é a lista fixada em `requirements.txt`. O OCR acrescenta o download dos modelos na primeira execução.
 - **RNF05.** O tempo de cada quadro inclui uma chamada de OCR. O hardware disponível para o PyTorch (CPU ou GPU) determina esse tempo.
-- **RNF06.** O resultado numérico só se reproduz numa gravação do mesmo cliente de nuvem, com o HUD nos mesmos pixels e com duração de quadro compatível com 0,033 s. Resolução, escala da janela e compressão do stream alteram cor e nitidez dos dígitos.
+- **RNF06.** O resultado numérico foi definido para gravação do GeForce NOW em 1920×1080, com os recortes medidos nessa resolução, e para uma duração de quadro compatível com 0,033 s. Outra resolução, outra escala da janela ou outro cliente desloca o HUD. A compressão do stream altera cor e nitidez dos dígitos.
 
 ### Fora do que o código faz hoje
 
@@ -127,7 +127,7 @@ No Debian/Ubuntu, se `python3 -m venv` avisar que o `ensurepip` não está dispo
 
 ## Vídeo de entrada
 
-A entrada esperada é um vídeo do HUD de Le Mans Ultimate capturado da transmissão do cloud gaming e salvo em arquivo. O script não captura essa transmissão sozinho. Um caminho reproduzível é: jogar Le Mans Ultimate no cliente (GeForce NOW, xCloud ou equivalente), gravar a janela ou usar a gravação que o próprio cliente oferecer, e exportar o trecho em que o HUD de acelerador, freio e velocidade está visível, no mesmo enquadramento em que os recortes foram medidos.
+A entrada esperada é um vídeo do HUD de Le Mans Ultimate gravado do GeForce NOW em 1080p (1920×1080). O autor confirmou essa resolução e confirmou que os recortes foram medidos nela. O script não captura a transmissão sozinho. Um caminho reproduzível é: jogar Le Mans Ultimate no GeForce NOW com a sessão em 1920×1080, gravar essa imagem e exportar o trecho em que o HUD de acelerador, freio e velocidade está visível, sem redimensionar o quadro.
 
 O arquivo de entrada não está no Git. `.gitignore` ignora `test_telemetria.mp4` e nomes com esse prefixo. Coloque a gravação no diretório de onde o script será executado, com este nome exato:
 
@@ -139,9 +139,9 @@ O caminho no código é relativo. Executar o script de outro diretório faz o `V
 
 ### Resolução e sistema de coordenadas
 
-Os recortes são fatias NumPy absolutas, no formato `[linha_inicial:linha_final, coluna_inicial:coluna_final]`, com origem no canto superior esquerdo do quadro e a linha crescendo para baixo. Para os três recortes existirem por inteiro, o quadro precisa ter pelo menos 1212 colunas e 690 linhas. Abaixo disso, a fatia volta vazia ou cortada e a contagem cai.
+Os recortes são fatias NumPy absolutas, no formato `[linha_inicial:linha_final, coluna_inicial:coluna_final]`, com origem no canto superior esquerdo do quadro e a linha crescendo para baixo. Foram medidos em quadros de 1920×1080 gravados do GeForce NOW. Nessa resolução, as barras ficam um pouco à direita do centro e um pouco abaixo do meio do quadro: as colunas 1053 a 1212 ocupam cerca de 55% a 63% da largura, e as linhas 575 a 690 ocupam cerca de 53% a 64% da altura. Os dígitos da velocidade ficam imediatamente à direita das barras.
 
-O repositório não contém o vídeo de Le Mans Ultimate usado para escolher esses números, então a resolução real dessa captura precisa ser confirmada pelo autor. Em um quadro de 1280×720, os recortes ficam no canto inferior direito: as barras por volta de 82% da largura e de 80% a 96% da altura, e os dígitos imediatamente à direita das barras. Outro tamanho de janela, outra escala do cliente de nuvem ou outro jogo deslocam o HUD e fazem os retângulos lerem o lugar errado.
+Um quadro menor que 1212×690 deixa alguma fatia vazia ou cortada e a contagem cai. Outra resolução, outra escala da janela do GeForce NOW ou outro jogo desloca o HUD e faz os mesmos números lerem o lugar errado. O arquivo de exemplo não está no repositório.
 
 ### Layout que os recortes assumem
 
@@ -151,7 +151,7 @@ O repositório não contém o vídeo de Le Mans Ultimate usado para escolher ess
 | Freio | rosa | `[575:677, 1053:1095]` | 102×42 px | HSV `[140, 100, 100]` a `[168, 255, 255]` |
 | Velocidade | dígitos | `[610:640, 1128:1212]` | 30×84 px | OCR; confiança > 0,5 e só dígitos |
 
-As duas barras ocupam a mesma faixa de colunas (1053:1095). As linhas se sobrepõem de 585 a 677. A separação entre acelerador e freio é a cor da máscara, não uma região disjunta. Isso descreve o HUD de Le Mans Ultimate na gravação de referência. O autor deve conferir se as barras desse jogo ficam mesmo assim na captura do stream (duas barras na mesma coluna, ou uma barra que troca de cor, com caixas ligeiramente diferentes).
+As duas barras ocupam a mesma faixa de colunas (1053:1095). As linhas se sobrepõem de 585 a 677. A separação entre acelerador e freio é a cor da máscara, não uma região disjunta. Esses retângulos são os que o autor mediu no HUD de Le Mans Ultimate em 1920×1080.
 
 O número da velocidade precisa caber nesse retângulo de 30×84 pixels, em dígitos que o EasyOCR leia como texto numérico inteiro. Um rótulo com unidade (`120 km/h`), espaço ou casa decimal é rejeitado por `text.isdigit()`.
 
@@ -181,8 +181,8 @@ O arquivo de vídeo só é liberado depois que essa janela fecha. Nada é gravad
 
 - A telemetria nativa de Le Mans Ultimate não entra no fluxo. Tudo o que o gráfico mostra foi lido do vídeo do stream.
 - O script não abre a sessão na nuvem. Sem um arquivo já gravado, não há o que processar.
-- Compressão, bitrate e escala do cliente de cloud gaming mudam a cor das barras e a nitidez dos dígitos. Os limiares HSV e o OCR foram ajustados a um HUD fixo, não a qualquer qualidade de transmissão.
-- Os recortes e as cores são constantes. Qualquer mudança de resolução, escala da janela ou posição do HUD invalida a leitura sem um erro explicativo.
+- Compressão e bitrate do GeForce NOW mudam a cor das barras e a nitidez dos dígitos. Os limiares HSV e o OCR foram ajustados ao HUD de Le Mans Ultimate nessa gravação de 1920×1080.
+- Os recortes e as cores são constantes, medidos em 1080p. Outra resolução ou outra escala da janela do GeForce NOW invalida a leitura sem um erro explicativo.
 - O passo de 0,033 s aproxima o período de 30 quadros por segundo (1/30 ≈ 0,0333). Em um vídeo de 60 fps a distância fica cerca do dobro da distância real, porque o código não consulta a taxa do arquivo.
 - A velocidade rejeitada não zera o valor: um dígito lido uma vez continua valendo nos quadros seguintes em que o OCR falha.
 - `text.isdigit()` descarta leituras com erro típico de OCR que mistura letra e número.
@@ -198,12 +198,10 @@ Os quatro diagramas UML pedidos na metodologia do trabalho prático estão em [`
 
 ## O que o autor precisa revisar
 
-- Qual cliente de nuvem (GeForce NOW, xCloud ou outro) produziu o `test_telemetria.mp4` usado para medir os recortes. O jogo dessa captura, confirmado pelo autor, é Le Mans Ultimate; o nome não está no código.
-- A redação de RP01–RP04, para o tom do TCC. O conteúdo desse bloco segue o que o autor descreveu sobre público e problema.
+- A redação de RP01–RP04, para o tom do TCC. O conteúdo desse bloco segue o que o autor descreveu. Já estão confirmados o jogo (Le Mans Ultimate), o cliente (GeForce NOW) e a resolução em que os recortes foram medidos (1920×1080).
 - A seção de justificativa das ferramentas, para que ela descreva a escolha que de fato foi feita.
-- RF01–RF09 e RNF02–RNF06 nos pontos em que o número veio só do código (recortes, HSV, confiança, 0,033 s, percentual pelo máximo).
+- As faixas HSV e o limiar de confiança do OCR. Esses números estão no código e ainda não foram confirmados como escolha de projeto.
 - Se a análise de desempenho precisa da série gravada em arquivo. Hoje o resultado é só a janela do gráfico.
-- A resolução do `test_telemetria.mp4` e se as barras verde e rosa ocupam mesmo os retângulos da tabela, inclusive a sobreposição.
 - Se 0,033 s é o período real dos quadros dessa gravação.
 - Se o percentual relativo ao máximo da gravação é a grandeza que o gráfico deve mostrar, ou se a escala deveria ser a altura cheia da barra.
 - Os parágrafos em `docs/diagramas/README.md` antes de colá-los na Metodologia (numeração de figuras e fonte, no padrão ABNT adotado no trabalho).
