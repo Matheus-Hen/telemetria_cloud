@@ -20,13 +20,13 @@ Oferecer a esse piloto uma telemetria própria de análise de desempenho, extra�
 
 A velocidade é acumulada em distância com o período de um quadro (`1/fps`). No fim, o script abre um gráfico do percentual de cada barra contra a distância, ou grava esse gráfico em PNG. A série (tempo, distância, velocidade e percentuais) pode ser gravada em CSV.
 
-A gravação do autor no GeForce NOW é 1280×720 a 30 fps, e os recortes dessa captura estão no preset `lmu_gfn_720p`. O HUD padrão do Le Mans Ultimate, com o dial no canto inferior direito, está no preset `lmu_default_1080p`, medido numa captura de 1920×1080 a 60 fps. O preset `original` conserva as coordenadas da primeira versão do script. Sem argumentos, o script abre `test_telemetria.mp4` com o preset `original`.
+A gravação do autor no GeForce NOW é 1280×720 a 30 fps, e os recortes dessa captura estão no preset `lmu_gfn_720p`. O HUD padrão do Le Mans Ultimate, com o dial no canto inferior direito, está no preset `lmu_default_1080p`, medido numa captura de 1920×1080 a 60 fps. O preset `original` conserva as coordenadas da primeira versão do script. Sem argumentos, o script abre `test_telemetria.mp4` com o preset `lmu_gfn_720p` (padrão desde a revisão pós-banca; antes era `original`).
 
 ## Como funciona
 
 `leitor.py` lê os argumentos, escolhe os recortes e percorre o vídeo.
 
-1. `--config` escolhe o preset `original`, `lmu_gfn_720p` ou `lmu_default_1080p`, ou um arquivo JSON com os três recortes. O padrão é `original`.
+1. `--config` escolhe o preset `original`, `lmu_gfn_720p` ou `lmu_default_1080p`, ou um arquivo JSON com os três recortes (e, opcionalmente, `area_acelerador` e `area_freio`). O padrão é `lmu_gfn_720p`. Se um recorte não tiver nenhum pixel da cor esperada em todo o vídeo, o script avisa no stderr que o preset provavelmente não corresponde à gravação.
 2. Cria um leitor EasyOCR para português e inglês (`easyocr.Reader(['pt', 'en'])`). Na primeira vez, a biblioteca baixa os modelos para `~/.EasyOCR/model`.
 3. Abre o vídeo de `--video` (padrão: `test_telemetria.mp4`) e lê `CAP_PROP_FPS`. Se a taxa não vier ou for inválida, usa 30. O passo é `dt = 1/fps`.
 4. Zera a velocidade (km/h) e a distância (m).
@@ -35,13 +35,13 @@ A gravação do autor no GeForce NOW é 1280×720 a 30 fps, e os recortes dessa 
    2. Aplica a máscara verde no recorte do acelerador e guarda a quantidade de pixels.
    3. Aplica a máscara rosa no recorte do freio e guarda a contagem do mesmo modo.
    4. Recorta a velocidade, converte de BGR para RGB e chama `readtext`.
-   5. Percorre os resultados. Se a confiança é maior que `--confianca` (padrão 0,5) e `text.isdigit()` é verdadeiro, substitui a velocidade por `int(text)`. Se vários resultados do mesmo quadro passam no filtro, fica o último da lista. Se nenhum passa, a velocidade anterior permanece (0 até a primeira leitura aceita).
+   5. Percorre os resultados. Se a confiança é maior que `--confianca` (padrão 0,5), `text.isdigit()` é verdadeiro, o valor está entre 0 e `--vel-max` (padrão 400 km/h) e não difere da última leitura aceita em mais de `--salto-max` (padrão 15 km/h) por quadro decorrido desde ela, substitui a velocidade por `int(text)`. Depois de 15 rejeições seguidas por salto, a próxima leitura dentro da faixa é aceita, para o filtro não ficar preso a um valor errado. Cada quadro recebe um status no CSV (`aceito`, `sem_leitura`, `rejeitado_confianca`, `rejeitado_nao_numerico`, `rejeitado_faixa` ou `rejeitado_salto`), e a contagem de cada status é impressa no fim da execução. Se vários resultados do mesmo quadro passam no filtro, fica o último da lista. Se nenhum passa, a velocidade anterior permanece (0 até a primeira leitura aceita).
    6. Soma `(velocidade / 3.6) * dt` metros à distância. `velocidade / 3.6` converte km/h para m/s.
-6. Divide cada série de pixels pelo próprio máximo e multiplica por 100. Se o máximo é 0, o percentual fica em 0.
+6. Converte cada série de pixels em percentual com `--normalizacao`: `p99` (padrão) divide pelo percentil 99 da própria série e limita a 100; `max` divide pelo máximo (comportamento da primeira versão); `fixa` divide por `area_acelerador`/`area_freio` do preset. Se a referência é 0, o percentual fica em 0.
 7. Desenha as duas curvas contra a distância, com fundo escuro, preenchimento e grade. Sem `--headless`, abre a janela com `plt.show()`. Com `--headless`, grava o PNG e não abre janela.
 8. Se `--csv` foi informado, grava a série já em percentual.
 
-O percentual de cada barra é relativo ao maior valor observado naquela série, naquela gravação. O pico de uma curva que teve ao menos um pixel colorido fica em 100%, mesmo que a barra do HUD nunca tenha enchido o recorte.
+O percentual de cada barra é relativo ao percentil 99 daquela série, naquela gravação: pressupõe que a gravação tenha acionamentos plenos. Com `max`, um único quadro atípico (por exemplo, pixels da pista dentro do recorte) comprime todas as outras leituras; foi o que ocorreu com o recorte original do freio em `lmu_gfn_720p`, que alcançava a zebra vermelha e branca da pista acima do dial.
 
 ## Tecnologias e justificativa
 
@@ -49,7 +49,7 @@ O texto desta seção é uma justificativa reconstruída a partir do que o scrip
 
 | Ferramenta | Versão fixada | Papel neste script |
 | --- | --- | --- |
-| Python | 3.12 na verificação desta documentação | Executa o processamento de ponta a ponta |
+| Python | 3.13 (avaliação do TCC) | Executa o processamento de ponta a ponta |
 | OpenCV (`opencv-python-headless`) | 4.13.0.92 | Abre o vídeo, converte cor, recorta e conta pixels da máscara |
 | NumPy | 2.5.0 | Guarda as séries e fornece os limites HSV |
 | EasyOCR | 1.7.2 | Lê os dígitos da velocidade e devolve a confiança |
@@ -86,13 +86,13 @@ Estes itens são o modo como o script cumpre a extração descrita em RP03.
 - **RF01.** O sistema abre o vídeo indicado em `--video`. Sem o argumento, abre `test_telemetria.mp4`.
 - **RF02.** Para cada quadro, o sistema estima o acelerador pela quantidade de pixels verdes no recorte do preset ou do JSON, com HSV de `[35, 40, 40]` a `[85, 255, 255]`.
 - **RF03.** Para cada quadro, o sistema estima o freio pela quantidade de pixels rosa no recorte correspondente, com HSV de `[140, 80, 80]` a `[179, 255, 255]`.
-- **RF04.** O sistema lê a velocidade no recorte escolhido, com OCR em português e inglês, e aceita somente texto formado só por dígitos com confiança maior que `--confianca` (padrão 0,5).
+- **RF04.** O sistema lê a velocidade no recorte escolhido, com OCR em português e inglês, e aceita somente texto formado só por dígitos com confiança maior que `--confianca` (padrão 0,5), dentro da faixa 0–`--vel-max` e sem variação maior que `--salto-max` por quadro decorrido desde a última leitura aceita; cada rejeição é registrada com o motivo.
 - **RF05.** Quando o quadro não produz leitura aceita, o sistema conserva a última velocidade aceita. Até a primeira leitura aceita, a velocidade usada é 0.
 - **RF06.** Se o OCR devolve mais de um texto aceito no mesmo quadro, o sistema fica com o último item dessa lista.
 - **RF07.** A cada quadro, o sistema soma à distância `(velocidade_em_km/h / 3,6) * (1/fps)` metros. A taxa vem de `CAP_PROP_FPS`. Se ela falta ou é inválida, o sistema usa 30 fps.
-- **RF08.** Ao terminar o vídeo, o sistema converte cada série de pixels em percentual do máximo da própria série. Máximo 0 vira percentual 0.
+- **RF08.** Ao terminar o vídeo, o sistema converte cada série de pixels em percentual de uma referência: o percentil 99 da própria série (padrão), o máximo ou a área fixa da barra no preset. Referência 0 vira percentual 0.
 - **RF09.** O sistema exibe, ou grava em PNG com `--headless`, um gráfico de linha do percentual do acelerador (verde) e do freio (vermelho) em função da distância, com o título `Telemetria`, o eixo horizontal `Distância (m)` e o eixo vertical `% aceleração/freio`.
-- **RF10.** Com `--csv`, o sistema grava `tempo_s`, `distancia_m`, `velocidade_kmh`, `acelerador_pct` e `freio_pct`.
+- **RF10.** Com `--csv`, o sistema grava `tempo_s`, `distancia_m`, `velocidade_kmh`, `acelerador_pct`, `freio_pct`, `px_acelerador`, `px_freio` e `ocr_status`.
 
 ### Requisitos não funcionais
 
@@ -105,11 +105,11 @@ Estes itens são o modo como o script cumpre a extração descrita em RP03.
 
 ### Fora do que o código faz hoje
 
-Limites do script: ele não acompanha a barra se o HUD mudar de lugar entre um preset e outro (é preciso trocar `--config`), não trata mais de um vídeo por execução, não calcula tempo de volta e não confronta a leitura com uma telemetria de referência — que, no cenário de RP02, o piloto não recebe do servidor. O arco vermelho de RPM do HUD padrão pode cair na faixa rosa e inflar o freio em alguns quadros.
+Limites do script: ele não acompanha a barra se o HUD mudar de lugar entre um preset e outro (é preciso trocar `--config`), não trata mais de um vídeo por execução, não calcula tempo de volta e não confronta a leitura com uma telemetria de referência — que, no cenário de RP02, o piloto não recebe do servidor. Na captura `lmu_gfn_720p`, o recorte original do freio (linhas 548–672) alcançava a zebra da pista acima do dial e gerava acionamentos espúrios; o recorte revisado (linhas 582–681, colunas 1063–1082) cobre só o arco da barra. No HUD padrão, o arco vermelho de RPM pode cair na faixa rosa e inflar o freio em alguns quadros.
 
 ## Instalação
 
-Requisitos de sistema: Python 3.12, `pip` e espaço em disco para o PyTorch que o EasyOCR instala (vários GB). No índice padrão do PyPI o pacote binário do PyTorch inclui bibliotecas CUDA e também carrega em máquina só com CPU. Na primeira execução é preciso rede para baixar os modelos do EasyOCR.
+Requisitos de sistema: Python 3.13 (versão usada na avaliação do TCC), `pip` e espaço em disco para o PyTorch que o EasyOCR instala (vários GB). No índice padrão do PyPI o pacote binário do PyTorch inclui bibliotecas CUDA e também carrega em máquina só com CPU. Na primeira execução é preciso rede para baixar os modelos do EasyOCR.
 
 ```bash
 python3 -m venv .venv
@@ -163,10 +163,10 @@ O freio ocupa as colunas 1565:1592 e o acelerador as colunas 1590:1615: lado a l
 | Sinal | Cor no HUD | Recorte (linhas, colunas) | Tamanho |
 | --- | --- | --- | --- |
 | Acelerador | verde | `[585:678, 1070:1088]` | 93×18 px |
-| Freio | rosa | `[548:672, 1064:1078]` | 124×14 px |
+| Freio | rosa | `[582:681, 1063:1082]` | 99×19 px |
 | Velocidade | dígitos KPH | `[608:655, 1140:1235]` | 47×95 px |
 
-O freio ocupa as colunas 1064:1078 e o acelerador as colunas 1070:1088: lado a lado, freio à esquerda, no arco interno esquerdo do dial. O arquivo `configs/config_gfn_720p.json` repete estes três recortes para `--config`.
+O freio ocupa as colunas 1063:1082 e o acelerador as colunas 1070:1088: lado a lado, freio à esquerda, no arco interno esquerdo do dial. O recorte do freio começa na linha 582, abaixo da borda do dial: o recorte antigo (`[548:672, 1064:1078]`) incluía a imagem da pista nas linhas 548–571 e contava a zebra como freio. O preset também guarda `area_acelerador` (380 px) e `area_freio` (369 px), pegada das barras usada por `--normalizacao fixa`. O arquivo `configs/config_gfn_720p.json` repete estes valores para `--config`.
 
 A faixa verde é HSV `[35, 40, 40]` a `[85, 255, 255]`. A faixa rosa é HSV `[140, 80, 80]` a `[179, 255, 255]`, em todos os presets. O limite antigo de matiz 168 deixava o freio do HUD padrão quase vazio, porque a barra medida fica em torno de 172.
 
@@ -198,10 +198,10 @@ O mesmo recorte lido do JSON:
 python leitor.py --video video.mp4 --config configs/config_gfn_720p.json --headless --png telemetria.png --csv telemetria.csv
 ```
 
-Sem argumentos, o script procura `test_telemetria.mp4` e usa o preset `original`:
+Sem argumentos, o script procura `test_telemetria.mp4` e usa o preset `lmu_gfn_720p`. Para a primeira versão das coordenadas:
 
 ```bash
-python leitor.py --video test_telemetria.mp4 --config original
+python leitor.py --video test_telemetria.mp4 --config original --normalizacao max
 ```
 
 HUD padrão, gráfico em PNG e série em CSV, sem janela:
@@ -239,23 +239,28 @@ Sem `--headless`, uma janela do Matplotlib. Com `--headless`, um PNG no caminho 
 - grade com transparência 0,2;
 - título `Telemetria`, eixo horizontal `Distância (m)`, eixo vertical `% aceleração/freio`.
 
-O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acelerador_pct,freio_pct`. Tempo e distância usam o `dt` do arquivo. A velocidade é a última leitura aceita naquele quadro. Os percentuais já estão normalizados pelo máximo da gravação.
+O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acelerador_pct,freio_pct,px_acelerador,px_freio,ocr_status`. Tempo e distância usam o `dt` do arquivo. A velocidade é a última leitura aceita naquele quadro. Os percentuais seguem `--normalizacao`; as contagens brutas de pixels permitem renormalizar fora do script.
 
 ## Limitações
 
 - A telemetria nativa de Le Mans Ultimate não entra no fluxo. O gráfico mostra o que foi lido do vídeo.
 - O script não abre a sessão na nuvem. Sem um arquivo já gravado, não há o que processar.
 - Cada preset vale para um enquadramento. `lmu_gfn_720p` é a captura de 1280×720; `lmu_default_1080p` é o HUD padrão em 1920×1080. Trocar o preset no vídeo errado faz os recortes caírem fora das barras.
+- Um recorte que alcance a imagem da pista conta zebras e placas da mesma cor como freio ou acelerador. O aviso de recorte vazio não detecta esse caso.
 - O arco vermelho de RPM pode invadir a faixa rosa e contar como freio em alguns quadros do HUD padrão.
 - Compressão e bitrate do stream mudam a cor das barras e a nitidez dos dígitos.
 - Outra resolução ou outra escala da janela desloca o HUD e os recortes leem o lugar errado.
 - A distância usa `1/fps` do arquivo. Se o contêiner mente a taxa, a distância sai na mesma proporção. Sem taxa válida, o passo assume 30 fps.
 - A velocidade rejeitada não zera o valor: um dígito lido uma vez continua valendo nos quadros seguintes em que o OCR falha.
 - `text.isdigit()` descarta leitura com letra, espaço ou unidade no mesmo trecho.
-- O percentual 100% é o máximo da própria gravação. Acelerador e freio não compartilham o mesmo máximo.
-- Vídeo ausente ou sem quadros encerra o script com uma mensagem. Máximo de pixels igual a 0 vira percentual 0, sem divisão por zero.
+- O percentual 100% é o percentil 99 da própria gravação (ou o máximo, com `--normalizacao max`). Acelerador e freio não compartilham a mesma referência. O percentual é o preenchimento da barra no HUD, não a posição física do pedal.
+- Vídeo ausente ou sem quadros encerra o script com uma mensagem. Recorte sem nenhum pixel da cor gera aviso, e referência 0 vira percentual 0, sem divisão por zero.
 - Não há comparação automática com uma telemetria de referência.
 - Sem `--headless`, a janela exige um backend interativo do Matplotlib.
+
+## Avaliação (TCC)
+
+A pasta `avaliacao/busca/` traz o registro da busca bibliográfica do TCC (respostas das APIs OpenAlex e Semantic Scholar e os scripts que as consultaram).
 
 ## Diagramas
 
@@ -266,5 +271,5 @@ Os quatro diagramas UML pedidos na metodologia do trabalho prático estão em [`
 - A redação de RP01–RP04, para o tom do TCC. Já estão confirmados o jogo (Le Mans Ultimate), a captura do autor no GeForce NOW em 1280×720 a 30 fps (preset `lmu_gfn_720p`, OBS, Fuji Speedway) e o HUD padrão em 1920×1080 a 60 fps para o preset `lmu_default_1080p`.
 - A seção de justificativa das ferramentas, para que ela descreva a escolha que de fato foi feita.
 - A faixa verde e o limiar padrão 0,5. A faixa rosa `[140, 80, 80]`–`[179, 255, 255]` foi a correção aprovada para a matiz medida perto de 172.
-- Se o percentual relativo ao máximo da gravação é a grandeza que o gráfico deve mostrar, ou se a escala deveria ser a altura cheia da barra.
+- Se o percentil 99 deve continuar como padrão, ou se `fixa` deve virar padrão depois de calibrar a área a partir de quadros de barra plena (na avaliação do TCC, a área medida pela frequência de pixels leu a barra plena como 88–94%).
 - Os parágrafos em `docs/diagramas/README.md` antes de colá-los na Metodologia (numeração de figuras e fonte, no padrão ABNT adotado no trabalho).

@@ -1,0 +1,452 @@
+{
+ "cloud gaming telemetry": {
+  "total": 11124,
+  "offset": 0,
+  "next": 20,
+  "data": [
+   {
+    "paperId": "f91b37ab6dc02ce5a77dcc67ce13f2e80e8a98bb",
+    "externalIds": {
+     "ArXiv": "2402.04454",
+     "DBLP": "journals/corr/abs-2402-04454",
+     "DOI": "10.48550/arXiv.2402.04454",
+     "CorpusId": 267522912
+    },
+    "title": "Evolving Mobile Cloud Gaming with 5G Standalone Network Telemetry",
+    "venue": "arXiv.org",
+    "year": 2024
+   },
+   {
+    "paperId": "3b9269d66a2ed78a1c94c73c97d47d6c64e0c754",
+    "externalIds": {
+     "DOI": "10.5753/sbrc.2025.6266",
+     "CorpusId": 279011859
+    },
+    "title": "DCTPQ: Dynamic Cloud Gaming Traffic Prioritization Using Machine Learning and Multi-Queueing for QoE Enhancement",
+    "venue": "Brazilian Symposium on Computer Networks and Distributed Systems",
+    "year": 2025
+   },
+   {
+    "paperId": "7385d9d5f502ba9367774cba6455a3791d47bd53",
+    "externalIds": {
+     "DBLP": "conf/wons/OliveiraSM26",
+     "DOI": "10.23919/WONS68803.2026.11501840",
+     "CorpusId": 286520470
+    },
+    "title": "Characterizing the Network Traffic of Virtual Reality Cloud Gaming Applications",
+    "venue": "Wireless on Demand Network Systems and Service",
+    "year": 2026
+   },
+   {
+    "paperId": "56f0cf8d70d4c6c47ff937ee2deb6951ad872400",
+    "externalIds": {
+     "DBLP": "conf/ems2/WangLS24",
+     "DOI": "10.1145/3672196.3673400",
+     "CorpusId": 271232737
+    },
+    "title": "Standardizing Multimedia QoE Telemetry from Telecommunications Networks for Open Analytics",
+    "venue": "EMS@SIGCOMM",
+    "year": 2024
+   },
+   {
+    "paperId": "a62cfb013ec6a2c7ee1295cfd70a43a0424b090a",
+    "externalIds": {
+     "DOI": "10.63282/3050-9262.ijaidsml-v7i1p110",
+     "CorpusId": 285517158
+    },
+    "title": "Gaming as the Most Advanced E-Commerce Laboratory",
+    "venue": "International Journal of Artificial Intelligence, Data Science, and Machine Learning",
+    "year": 2026
+   },
+   {
+    "paperId": "102548bd685b5e7ba37dc0e6cf993464f0ea00e1",
+    "externalIds": {
+     "ArXiv": "2511.16902",
+     "CorpusId": 283226118
+    },
+    "title": "ARC: Consistent, Low-Latency Delivery via Receiver-Side Scheduling",
+    "venue": "",
+    "year": 2025
+   },
+   {
+    "paperId": "6b7c2d98f628b33dfd607953df0b57388647807d",
+    "externalIds": {
+     "DOI": "10.14445/22312803/ijctt-v74i4p105",
+     "CorpusId": 289198238
+    },
+    "title": "SCONE-AEGIS: Uncertainty-Aware AI-Driven Edge Compute Steering for Mobile Edge Applications",
+    "venue": "International Journal of Computer Trends and Technology",
+    "year": 2026
+   },
+   {
+    "paperId": "3c1bd3c48abc4f1ec7d09d925e36b5e01a98ea17",
+    "externalIds": {
+     "DOI": "10.63282/3050-922x.ijeret-v7i4p102",
+     "CorpusId": 295432007
+    },
+    "title": "Context-Aware Quality of Experience Degradation Prediction for Real-Time 5G Mobile Applications Using Edge Intelligence",
+    "venue": "International Journal of Emerging Research in Engineering and Technology",
+    "year": 2026
+   },
+   {
+    "paperId": "1826df29ed256d294a0a192a049a1a302ba19cac",
+    "externalIds": {
+     "DOI": "10.53920/its-2026-1-2",
+     "CorpusId": 290062458
+    },
+    "title": "ІНТЕЛЕКТУАЛЬНА МІКРОСЕРВІСНА АРХІТЕКТУРА АДАПТИВНОЇ ГЕНЕРАЦІЇ ІНТЕРАКТИВНОГО ІГРОВОГО КОНТЕНТУ В РЕАЛЬНОМУ ЧАСІ",
+    "venue": "ITSynergy",
+    "year": 2026
+   },
+   {
+    "paperId": "2f6586553746b743bde5f8d8cc144e92924096a4",
+    "externalIds": {
+     "DBLP": "journals/cn/MonacoSSSBCM25",
+     "DOI": "10.1016/j.comnet.2025.111235",
+     "CorpusId": 277702250
+    },
+    "title": "Real-time latency prediction for cloud gaming applications",
+    "venue": "Comput. Networks",
+    "year": 2025
+   },
+   {
+    "paperId": "f2f50af735660392100db0a23d946b940fa73c45",
+    "externalIds": {
+     "DBLP": "conf/nsdi/LiQ000Y00XQX25",
+     "CorpusId": 278205342
+    },
+    "title": "Dissecting and Streamlining the Interactive Loop of Mobile Cloud Gaming",
+    "venue": "Symposium on Networked Systems Design and Implementation",
+    "year": 2025
+   },
+   {
+    "paperId": "8557346519839cf31c31d4c73e1e5bdcf636755b",
+    "externalIds": {
+     "PubMedCentral": "11902538",
+     "DOI": "10.3390/s25051594",
+     "CorpusId": 276836180,
+     "PubMed": "40096493"
+    },
+    "title": "Quality of Experience (QoE) in Cloud Gaming: A Comparative Analysis of Deep Learning Techniques via Facial Emotions in a Virtual Reality Environment",
+    "venue": "Italian National Conference on Sensors",
+    "year": 2025
+   },
+   {
+    "paperId": "6ea0a9646562be052c12214e34443e75410afd63",
+    "externalIds": {
+     "DBLP": "conf/nsdi/WangYKWJX0YXLZW24",
+     "CorpusId": 269240051
+    },
+    "title": "Pudica: Toward Near-Zero Queuing Delay in Congestion Control for Cloud Gaming",
+    "venue": "Symposium on Networked Systems Design and Implementation",
+    "year": 2024
+   },
+   {
+    "paperId": "cb8b69ee79188470c9f46f69796cdbff259af504",
+    "externalIds": {
+     "ArXiv": "2509.19669",
+     "DBLP": "conf/imc/WangLS25",
+     "DOI": "10.1145/3730567.3764455",
+     "CorpusId": 281505392
+    },
+    "title": "Games Are Not Equal: Classifying Cloud Gaming Contexts for Effective User Experience Measurement",
+    "venue": "ACM/SIGCOMM Internet Measurement Conference",
+    "year": 2025
+   },
+   {
+    "paperId": "fa07d739e1378c26e0801adfe204fe67117ed065",
+    "externalIds": {
+     "DBLP": "conf/mm/Alhilal0KBS25",
+     "DOI": "10.1145/3746027.3755439",
+     "CorpusId": 282393784
+    },
+    "title": "Congestion Control for VR Cloud Gaming: Integration and Comparison in Real VR Gaming Environment",
+    "venue": "ACM Multimedia",
+    "year": 2025
+   },
+   {
+    "paperId": "0eb31315dfbd9b130471682f17402a5e02ce29b9",
+    "externalIds": {
+     "DBLP": "journals/tcc/ZhangDGCWM25",
+     "DOI": "10.1109/TCC.2025.3571095",
+     "CorpusId": 278693201
+    },
+    "title": "Personalized Cloud Gaming: Multi-Objective Optimization for Resource Utilization and Video Encoding",
+    "venue": "IEEE Transactions on Cloud Computing",
+    "year": 2025
+   },
+   {
+    "paperId": "4dca047274ab26a074391821b85f5bc5c49a29a5",
+    "externalIds": {
+     "DBLP": "conf/mmsys/AlhilalWT024",
+     "DOI": "10.1145/3625468.3647612",
+     "CorpusId": 269221254
+    },
+    "title": "FovOptix: Human Vision-Compatible Video Encoding and Adaptive Streaming in VR Cloud Gaming",
+    "venue": "ACM SIGMM Conference on Multimedia Systems",
+    "year": 2024
+   },
+   {
+    "paperId": "ee3d0fca7f6027514e43aec25fd2253723b4e725",
+    "externalIds": {
+     "ArXiv": "2401.06366",
+     "DBLP": "conf/pam/LyuMVS24",
+     "DOI": "10.1007/978-3-031-56249-5_3",
+     "CorpusId": 266977383
+    },
+    "title": "Network Anatomy and Real-Time Measurement of Nvidia GeForce NOW Cloud Gaming",
+    "venue": "Passive and Active Network Measurement Conference",
+    "year": 2024
+   },
+   {
+    "paperId": "5939294f10765df3fc4de20cf42c8878841ab07e",
+    "externalIds": {
+     "DBLP": "conf/tma/GraffMCMTF24",
+     "DOI": "10.23919/TMA62044.2024.10558920",
+     "CorpusId": 270639707
+    },
+    "title": "Improving Cloud Gaming Traffic QoS: A Comparison Between Class-Based Queuing Policy and L4S",
+    "venue": "Traffic Monitoring and Analysis",
+    "year": 2024
+   },
+   {
+    "paperId": "962ad2b7a1930c43308760102f1dd8136079596a",
+    "externalIds": {
+     "DBLP": "conf/netsoft/ShirmarzVSR24",
+     "DOI": "10.1109/NetSoft60951.2024.10588893",
+     "CorpusId": 271091618
+    },
+    "title": "From Pixels to Packets: Traffic Classification of Augmented Reality and Cloud Gaming",
+    "venue": "IEEE Conference on Network Softwarization",
+    "year": 2024
+   }
+  ]
+ },
+ "sim racing telemetry video": {
+  "error": "HTTP Error 429: "
+ },
+ "racing game HUD OCR telemetry": {
+  "error": "HTTP Error 429: "
+ },
+ "extract telemetry from video OCR speed": {
+  "error": "HTTP Error 429: "
+ },
+ "game video HUD information extraction": {
+  "error": "HTTP Error 429: "
+ },
+ "telemetria jogos em nuvem": {
+  "error": "HTTP Error 429: "
+ },
+ "telemetria simulador de corrida": {
+  "error": "HTTP Error 429: "
+ },
+ "extração de dados vídeo HUD OCR": {
+  "total": 74,
+  "offset": 0,
+  "next": 20,
+  "data": [
+   {
+    "paperId": "a259a2590012d024f7a2b0e477e1eee5e3b75091",
+    "externalIds": {
+     "DOI": "10.47094/cobramseg2026.2/7",
+     "CorpusId": 295653008
+    },
+    "title": "AUTOMAÇÃO DA EXTRAÇÃO DE DADOS GEOTÉCNICOS HISTÓRICOS COM DOCUMENT INTELLIGENCE E OCR AVANÇADO",
+    "venue": "ANAIS DO XXII CONGRESSO BRASILEIRO DE MECÂNICA DOS SOLOS E ENGENHARIA GEOTÉCNICA – COBRAMSEG 2026 EIXO TEMÁTICO: BIG DATA E INTELIGÊNCIA ARTIFICIAL EM GEOTECNICA",
+    "year": 2026
+   },
+   {
+    "paperId": "4310b9c9081711445625d0853d5bc73978878236",
+    "externalIds": {
+     "DOI": "10.5753/erbase.2026.29908",
+     "CorpusId": 295562043
+    },
+    "title": "FoodLens AI: Um Sistema de Reconhecimento de Produtos com Visão Computacional, OCR e Enriquecimento de Dados em Tempo Real",
+    "venue": "Anais da XXVI Escola Regional de Computação Bahia, Alagoas e Sergipe (ERBASE 2026)",
+    "year": 2026
+   },
+   {
+    "paperId": "e1c90f32b8d1b63655429b050399bf0968f091b7",
+    "externalIds": {
+     "DOI": "10.22169/cadernointer.v15n56.4059",
+     "CorpusId": 292686438
+    },
+    "title": "AGENTES DE INTELIGÊNCIA ARTIFICIAL NA PESQUISA HISTÓRICA: TRANSCRIÇÃO, EXTRAÇÃO DE INFORMAÇÕES E CRÍTICA DAS FONTES EM ACERVOS DOCUMENTAIS",
+    "venue": "Caderno Intersaberes",
+    "year": 2026
+   },
+   {
+    "paperId": "0a9c7ae72b553f65dcd520224a98ccf5ae811eac",
+    "externalIds": {
+     "DOI": "10.5753/sbbd_estendido.2022.21844",
+     "CorpusId": 252491499
+    },
+    "title": "@Minerva_web: Análise de Colaboração em Processos de Negócio por meio de Dados de Proveniência Multimodais",
+    "venue": "Anais Estendidos do XXXVII Simpósio Brasileiro de Banco de Dados (SBBD Estendido 2022)",
+    "year": 2022
+   },
+   {
+    "paperId": "d3d8c3be81434c4d23ccb93fba67fb1adffce683",
+    "externalIds": {
+     "DOI": "10.22477/vi.widat.43",
+     "CorpusId": 260991456
+    },
+    "title": "A Organização, mineração e inserção automatizada de dados documentais no Tainacan: propostas para os Bens Culturais Registrados pelo Iphan",
+    "venue": "VI Workshop de Informação Dados e Tecnologia",
+    "year": 2023
+   },
+   {
+    "paperId": "276da27ddb8882942825261afad60ec5554728c4",
+    "externalIds": {
+     "MAG": "2913798728",
+     "CorpusId": 192021770
+    },
+    "title": "Extração Automática de Texto em Imagem/Vídeo",
+    "venue": "",
+    "year": 2018
+   },
+   {
+    "paperId": "ef00cc3e4808d4dc547b18f1a0569ac66cbe78ad",
+    "externalIds": {
+     "DOI": "10.47328/ufvbbt.2024.310",
+     "CorpusId": 272243246
+    },
+    "title": "Avaliação de técnicas de reconhecimento óptico de caracteres (OCR) para análise de dados em português disseminados em plataformas de mídias sociais",
+    "venue": "",
+    "year": null
+   },
+   {
+    "paperId": "2e02ef03af47bca21fecc623c658c16d1bd8d0ef",
+    "externalIds": {
+     "MAG": "2969377423",
+     "CorpusId": 202132461
+    },
+    "title": "Indexação de dados métricos em bancos de dados complexos",
+    "venue": "",
+    "year": 2018
+   },
+   {
+    "paperId": "beae461d84f7c9d88347b54b26f611d16ce4f190",
+    "externalIds": {
+     "MAG": "2102395008",
+     "DOI": "10.18803/CAPSI.V14.326-346",
+     "CorpusId": 145314903
+    },
+    "title": "Uma Arquitetura Moderna de Dados: Um Caso de Teste *",
+    "venue": "",
+    "year": 2014
+   },
+   {
+    "paperId": "536ad203e1f39dd73de60183b11a9859d74e49ec",
+    "externalIds": {
+     "DOI": "10.19132/1807-8583.57.140249",
+     "CorpusId": 275409014
+    },
+    "title": "Ideologia Paralela",
+    "venue": "Intexto",
+    "year": 2025
+   },
+   {
+    "paperId": "003401540c33af861e4926247df279aca5616442",
+    "externalIds": {
+     "DOI": "10.36557/2674-8169.2025v7n11p1768-1788",
+     "CorpusId": 283336162
+    },
+    "title": "FATORES ASSOCIADOS AO CONHECIMENTO DOS ESTUDANTES DE ENFERMAGEM SOBRE SUPORTE BÁSICO DE VIDA: SCOPING REVIEW",
+    "venue": "Brazilian Journal of Implantology and Health Sciences",
+    "year": 2025
+   },
+   {
+    "paperId": "6ccec9fbc36fdbaac00142ce2d61daeb1f38f5ba",
+    "externalIds": {
+     "DOI": "10.1590/s0103-73312025350322pt",
+     "CorpusId": 281475345
+    },
+    "title": "Utilização de aplicativos móveis como suporte à prática clínica odontológica de cirurgiões-dentistas: revisão de escopo",
+    "venue": "Physis",
+    "year": 2025
+   },
+   {
+    "paperId": "1cfd21037052c1a3c23a0895b92928097b756984",
+    "externalIds": {
+     "DOI": "10.70773/revistatopicos/775422980",
+     "CorpusId": 287230989
+    },
+    "title": "ANÁLISE MULTIMODAL PARA DETECÇÃO DE ATIVIDADES HUMANAS EM AMBIENTE DOMÉSTICO UTILIZANDO VISÃO COMPUTACIONAL E MODELOS DE APRENDIZADO PROFUNDO",
+    "venue": "Revista Tópicos",
+    "year": 2026
+   },
+   {
+    "paperId": "b3ab8379b9f3da8c009c8ae73f5235e1e2b1ed20",
+    "externalIds": {
+     "DOI": "10.56238/dimensaov17n3-007",
+     "CorpusId": 283398410
+    },
+    "title": "ACESSIBILIDADE DIGITAL PARA ESTUDANTES COM DEFICIÊNCIA VISUAL NA EDUCAÇÃO BÁSICA: DIAGNÓSTICO TÉCNICO E RECOMENDAÇÕES DE BAIXO CUSTO",
+    "venue": "Revista Dimensão",
+    "year": 2025
+   },
+   {
+    "paperId": "006932b55185c745352a8ac8c11fea1160f02a64",
+    "externalIds": {
+     "DOI": "10.26571/reamec.v12.17005",
+     "CorpusId": 275144131
+    },
+    "title": "O GARIMPO COMO PRÁTICA ILEGAL NA REGIÃO AMAZÔNICA BRASILEIRA: UMA PROPOSTA DE EDUCAÇÃO AMBIENTAL NA ESCOLA",
+    "venue": "REAMEC - Rede Amazônica de Educação em Ciências e Matemática",
+    "year": 2024
+   },
+   {
+    "paperId": "f40f25106c5cc48f9588069c0f1ef4488fdde77a",
+    "externalIds": {
+     "DOI": "10.14210/cotb.v16.p001-008",
+     "CorpusId": 278955824
+    },
+    "title": "Aplicação de Visão Computacional para Identificação de Códigos de Contêineres",
+    "venue": "Anais do Computer on the Beach",
+    "year": 2025
+   },
+   {
+    "paperId": "fe681e100fbbe2efe7b89ac1d0d6363e2e93c414",
+    "externalIds": {
+     "DOI": "10.5335/rbca.v15i3.14743",
+     "CorpusId": 266114131
+    },
+    "title": "Categorização de ações em vídeos de futebol utilizando uma arquitetura CNN-RNN",
+    "venue": "Revista Brasileira de Computação Aplicada",
+    "year": 2023
+   },
+   {
+    "paperId": "0235aad14ac4f2f5a081f81682615f2107b1c739",
+    "externalIds": {
+     "MAG": "3211669160",
+     "DOI": "10.1016/J.BJORLP.2021.09.017",
+     "CorpusId": 245761815
+    },
+    "title": "O video head impulse test substitui a prova calórica na avaliação de pacientes com tontura crônica? Uma revisão sistemática e metanálise",
+    "venue": "Brazilian Journal of Otorhinolaryngology (Versão em Português)",
+    "year": 2021
+   },
+   {
+    "paperId": "015dcbcee61cbe4ef18e23ddec260a872ea21923",
+    "externalIds": {
+     "DOI": "10.33448/rsd-v11i10.32942",
+     "CorpusId": 251174012
+    },
+    "title": "Aplicações de visão computacional na saúde: revisão de literatura incrementada com técnicas de processamento de linguagem natural",
+    "venue": "Research, Society and Development",
+    "year": 2022
+   },
+   {
+    "paperId": "4b730171db9ad87c9f5d7983d4343ccb3621455a",
+    "externalIds": {
+     "DOI": "10.1590/1980-220x-reeusp-2021-0433pt",
+     "CorpusId": 251005248
+    },
+    "title": "Tecnologias educativas para orientação da coleta de escarro da tuberculose pulmonar: revisão sistemática",
+    "venue": "Revista da Escola de Enfermagem da USP",
+    "year": 2022
+   }
+  ]
+ }
+}
