@@ -25,12 +25,21 @@ ROSA_SUPERIOR = np.array([179, 255, 255])
 
 # Cada recorte é (linha_inicial, linha_final, coluna_inicial, coluna_final).
 PRESETS = {
-    # Coordenadas originais do script, medidas na gravação do GeForce NOW.
-    # As duas barras compartilham a mesma coluna.
+    # Coordenadas da primeira versão do script. As duas barras compartilham a coluna.
     "original": {
         "acelerador": (585, 690, 1053, 1095),
         "freio": (575, 677, 1053, 1095),
         "velocidade": (610, 640, 1128, 1212),
+    },
+    # Captura real do autor: GeForce NOW, OBS, Le Mans Ultimate, Fuji Speedway,
+    # 1280×720, 30 fps. A barra de freio fica à esquerda do acelerador, no arco
+    # interno esquerdo do dial. O recorte da velocidade são os dígitos de KPH.
+    # A barra rosa de combustível (y >= 675, x >= 1090) fica de fora do freio.
+    # O widget verde dos pneus (x < 1050) fica de fora do acelerador.
+    "lmu_gfn_720p": {
+        "acelerador": (585, 678, 1070, 1088),
+        "freio": (548, 672, 1064, 1078),
+        "velocidade": (608, 655, 1140, 1235),
     },
     # HUD padrão do Le Mans Ultimate em 1920×1080: dial no canto inferior direito.
     # Freio à esquerda, acelerador à direita, no arco esquerdo do dial.
@@ -130,7 +139,7 @@ def parse_args():
         "--config",
         default="original",
         help=(
-            "Preset original ou lmu_default_1080p, ou caminho de um JSON "
+            "Preset original, lmu_gfn_720p ou lmu_default_1080p, ou caminho de um JSON "
             "com os recortes acelerador, freio e velocidade."
         ),
     )

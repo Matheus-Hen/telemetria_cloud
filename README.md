@@ -4,11 +4,11 @@ Pilotos de sim racing que usam um serviço de cloud gaming jogam num servidor re
 
 Este script existe para esse piloto montar a própria telemetria e analisar o desempenho a partir só desse vídeo. Ele mede as barras de acelerador e de freio pela cor, reconhece a velocidade numérica e acumula a distância. O `cloud` do nome do repositório (`telemetria_cloud`) designa esse cenário: telemetria reconstruída quando Le Mans Ultimate está na nuvem.
 
-O programa não entra na conta do GeForce NOW e não conversa com o processo do jogo. A entrada é um arquivo de vídeo da transmissão, já gravado. O autor confirmou gravações do GeForce NOW em 1080p (1920×1080) a 30 fps; o preset `original` guarda os recortes medidos nelas. Há um segundo preset, `lmu_default_1080p`, para o HUD padrão do jogo, conferido numa captura de 1920×1080 a 60 fps. O passo de tempo é `1/fps` lido do arquivo, com reserva de 30 fps se o vídeo não informar a taxa. O repositório é a parte prática de um TCC. Este README descreve o que o código faz hoje.
+O programa não entra na conta do GeForce NOW e não conversa com o processo do jogo. A entrada é um arquivo de vídeo da transmissão, já gravado. O autor confirmou a captura real no GeForce NOW, gravada no OBS em Le Mans Ultimate (Fuji Speedway), em 1280×720 a 30 fps; o preset `lmu_gfn_720p` guarda esses recortes. O preset `lmu_default_1080p` é outro enquadramento, o HUD padrão conferido numa captura de 1920×1080 a 60 fps. O passo de tempo é `1/fps` lido do arquivo, com reserva de 30 fps se o vídeo não informar a taxa. O repositório é a parte prática de um TCC. Este README descreve o que o código faz hoje.
 
 ## Público-alvo
 
-Pilotos de Le Mans Ultimate que disputam a sessão no GeForce NOW e usam o vídeo transmitido para analisar a própria pilotagem. O jogo roda no servidor da NVIDIA, e a telemetria de Le Mans Ultimate não chega ao computador do piloto. O mesmo tipo de restrição aparece em outros serviços de cloud gaming, como o Xbox Cloud Gaming (xCloud); os recortes deste repositório, porém, foram medidos em gravação do GeForce NOW.
+Pilotos de Le Mans Ultimate que disputam a sessão no GeForce NOW e usam o vídeo transmitido para analisar a própria pilotagem. O jogo roda no servidor da NVIDIA, e a telemetria de Le Mans Ultimate não chega ao computador do piloto. O mesmo tipo de restrição aparece em outros serviços de cloud gaming, como o Xbox Cloud Gaming (xCloud). Os recortes da captura do autor foram medidos no GeForce NOW em 1280×720.
 
 ## Objetivo
 
@@ -20,13 +20,13 @@ Oferecer a esse piloto uma telemetria própria de análise de desempenho, extra�
 
 A velocidade é acumulada em distância com o período de um quadro (`1/fps`). No fim, o script abre um gráfico do percentual de cada barra contra a distância, ou grava esse gráfico em PNG. A série (tempo, distância, velocidade e percentuais) pode ser gravada em CSV.
 
-A gravação do autor no GeForce NOW é 1920×1080 a 30 fps, e os recortes dessa captura estão no preset `original`. O HUD padrão do Le Mans Ultimate, com o dial no canto inferior direito, está no preset `lmu_default_1080p`, medido numa captura de 1920×1080 a 60 fps. Sem argumentos, o script abre `test_telemetria.mp4` com o preset `original`.
+A gravação do autor no GeForce NOW é 1280×720 a 30 fps, e os recortes dessa captura estão no preset `lmu_gfn_720p`. O HUD padrão do Le Mans Ultimate, com o dial no canto inferior direito, está no preset `lmu_default_1080p`, medido numa captura de 1920×1080 a 60 fps. O preset `original` conserva as coordenadas da primeira versão do script. Sem argumentos, o script abre `test_telemetria.mp4` com o preset `original`.
 
 ## Como funciona
 
 `leitor.py` lê os argumentos, escolhe os recortes e percorre o vídeo.
 
-1. `--config` escolhe o preset `original` ou `lmu_default_1080p`, ou um arquivo JSON com os três recortes. O padrão é `original`.
+1. `--config` escolhe o preset `original`, `lmu_gfn_720p` ou `lmu_default_1080p`, ou um arquivo JSON com os três recortes. O padrão é `original`.
 2. Cria um leitor EasyOCR para português e inglês (`easyocr.Reader(['pt', 'en'])`). Na primeira vez, a biblioteca baixa os modelos para `~/.EasyOCR/model`.
 3. Abre o vídeo de `--video` (padrão: `test_telemetria.mp4`) e lê `CAP_PROP_FPS`. Se a taxa não vier ou for inválida, usa 30. O passo é `dt = 1/fps`.
 4. Zera a velocidade (km/h) e a distância (m).
@@ -62,7 +62,7 @@ O texto desta seção é uma justificativa reconstruída a partir do que o scrip
 
 **NumPy.** As três séries crescem com `np.append`, e os limites de cor são arrays de três valores. Listas Python bastariam para centenas de quadros e evitariam o custo de realocar o array a cada `append`; o script, porém, já entrega esses dados ao Matplotlib como array. Pandas criaria um `DataFrame` que o gráfico não usa. A versão 2.5.0 foi mantida porque já estava fixada e é compatível com as outras versões desta lista.
 
-**EasyOCR, em lugar do Tesseract.** O HUD entrega um retângulo com um inteiro (30×84 pixels no preset `original`; 60×140 no `lmu_default_1080p`). O EasyOCR recebe a imagem RGB e devolve, para cada trecho, caixa, texto e confiança. O filtro do script (confiança acima de `--confianca`, padrão 0,5, e `text.isdigit()`) usa essa confiança diretamente, e `Reader(['pt', 'en'])` não pede um binário instalado à parte no sistema. O Tesseract, via `pytesseract`, é mais leve e é uma alternativa sólida para texto nítido, mas depende do executável do Tesseract no sistema operacional e, em dígitos pequenos de HUD, em geral pede ampliação, limiar e um modo de segmentação (`--psm`) ajustados ao recorte. Isso aumentaria etapas que este script não tem. PaddleOCR também devolve texto e confiança, com outro conjunto de modelos e uma instalação mais pesada, sem ganho claro para um único número. Casar cada dígito com um molde da fonte do HUD seria mais rápido e mais frágil a antialiasing e à troca de fonte. O EasyOCR é a biblioteca que o código chama; a comparação acima é o argumento sugerido para a Metodologia, e o autor deve confirmá-lo.
+**EasyOCR, em lugar do Tesseract.** O HUD entrega um retângulo com um inteiro (47×95 pixels no preset `lmu_gfn_720p`; 30×84 no `original`; 60×140 no `lmu_default_1080p`). O EasyOCR recebe a imagem RGB e devolve, para cada trecho, caixa, texto e confiança. O filtro do script (confiança acima de `--confianca`, padrão 0,5, e `text.isdigit()`) usa essa confiança diretamente, e `Reader(['pt', 'en'])` não pede um binário instalado à parte no sistema. O Tesseract, via `pytesseract`, é mais leve e é uma alternativa sólida para texto nítido, mas depende do executável do Tesseract no sistema operacional e, em dígitos pequenos de HUD, em geral pede ampliação, limiar e um modo de segmentação (`--psm`) ajustados ao recorte. Isso aumentaria etapas que este script não tem. PaddleOCR também devolve texto e confiança, com outro conjunto de modelos e uma instalação mais pesada, sem ganho claro para um único número. Casar cada dígito com um molde da fonte do HUD seria mais rápido e mais frágil a antialiasing e à troca de fonte. O EasyOCR é a biblioteca que o código chama; a comparação acima é o argumento sugerido para a Metodologia, e o autor deve confirmá-lo.
 
 **Matplotlib.** Duas curvas, preenchimento, grade e rótulos cabem em `pyplot` e `Axes`. `plt.show()` abre a janela; `--headless` grava o mesmo gráfico em PNG, sem display. Plotly acrescentaria um gráfico interativo e um runtime de front-end que o script não usa. Seaborn organiza gráficos estatísticos em cima do Matplotlib, sem papel nas duas séries brutas. `matplotlib-inline` só altera o backend dentro do IPython e do Jupyter; este arquivo é executado como script.
 
@@ -76,7 +76,7 @@ Há dois blocos. O bloco do problema e do público registra o que o autor inform
 
 - **RP01.** O público-alvo são pilotos de Le Mans Ultimate no GeForce NOW. A telemetria nativa do jogo permanece no servidor remoto, como também ocorre em outros serviços de cloud gaming.
 - **RP02.** O jogo executa em servidor remoto. A telemetria nativa do simulador não está disponível na máquina do piloto, e o sistema não depende dela.
-- **RP03.** A fonte de dados é o vídeo do HUD de Le Mans Ultimate gravado do GeForce NOW em 1080p (1920×1080). Os recortes foram medidos nessa resolução. O sistema extrai acelerador, freio e velocidade desse painel para o piloto compor a própria telemetria e analisar o desempenho ao longo da distância percorrida.
+- **RP03.** A fonte de dados é o vídeo do HUD de Le Mans Ultimate gravado do GeForce NOW em 1280×720 a 30 fps. Os recortes dessa captura estão no preset `lmu_gfn_720p`. O sistema extrai acelerador, freio e velocidade desse painel para o piloto compor a própria telemetria e analisar o desempenho ao longo da distância percorrida.
 - **RP04.** Nesta versão, a transmissão entra como arquivo de vídeo já gravado. O sistema não autentica no serviço de nuvem, não abre a sessão ao vivo e não se comunica com o processo do jogo.
 
 ### Requisitos funcionais
@@ -101,7 +101,7 @@ Estes itens são o modo como o script cumpre a extração descrita em RP03.
 - **RNF03.** Sem `--headless`, a saída do gráfico é a janela do Matplotlib. Com `--headless`, o gráfico vai para um PNG. O CSV é opcional.
 - **RNF04.** A instalação é a lista fixada em `requirements.txt`. O OCR acrescenta o download dos modelos na primeira execução. Argumentos, CSV e JSON usam a biblioteca padrão.
 - **RNF05.** O tempo de cada quadro inclui uma chamada de OCR. O hardware disponível para o PyTorch (CPU ou GPU) determina esse tempo.
-- **RNF06.** Cada preset vale para o enquadramento em que foi medido, em 1920×1080. Outra resolução ou outra escala da janela desloca o HUD. A compressão do stream altera cor e nitidez dos dígitos. A distância acompanha a taxa gravada no arquivo.
+- **RNF06.** Cada preset vale para o enquadramento em que foi medido. A captura do autor no GeForce NOW é 1280×720; o HUD padrão conferido à parte é 1920×1080. Outra resolução ou outra escala da janela desloca o HUD. A compressão do stream altera cor e nitidez dos dígitos. A distância acompanha a taxa gravada no arquivo.
 
 ### Fora do que o código faz hoje
 
@@ -124,12 +124,13 @@ No Debian/Ubuntu, se `python3 -m venv` avisar que o `ensurepip` não está dispo
 
 O script não captura a transmissão. Grave a sessão e passe o arquivo em `--video`.
 
-Há dois enquadramentos de 1920×1080 já descritos no código:
+Há três conjuntos de recortes no código:
 
-- **`original`.** Recortes medidos na gravação do autor no GeForce NOW, a 30 fps. As barras de acelerador e de freio ocupam a mesma coluna.
-- **`lmu_default_1080p`.** HUD padrão do Le Mans Ultimate: dial circular no canto inferior direito. O freio (rosa) fica à esquerda do acelerador (verde), no arco esquerdo do dial. A velocidade numérica fica à direita das barras. Este preset foi conferido numa captura de 1920×1080 a 60 fps.
+- **`lmu_gfn_720p`.** Captura real do autor: Le Mans Ultimate no GeForce NOW, gravada no OBS em Fuji Speedway, 1280×720 a 30 fps. O freio fica à esquerda do acelerador, no arco interno esquerdo do dial. A velocidade são os dígitos de KPH. O recorte do freio deixa de fora a barra rosa de combustível (`y >= 675` e `x >= 1090`). O recorte do acelerador deixa de fora o widget verde dos pneus (`x < 1050`). O mesmo conteúdo está em `configs/config_gfn_720p.json`.
+- **`lmu_default_1080p`.** HUD padrão do Le Mans Ultimate: dial circular no canto inferior direito, em 1920×1080. O freio (rosa) fica à esquerda do acelerador (verde), no arco esquerdo do dial. A velocidade numérica fica à direita das barras. Este preset foi conferido numa captura de 1920×1080 a 60 fps, não na gravação do GeForce NOW.
+- **`original`.** Coordenadas da primeira versão do script. As barras de acelerador e de freio ocupam a mesma coluna. Não é a calibração da captura de 1280×720.
 
-Para repetir a gravação do autor: jogar Le Mans Ultimate no GeForce NOW em 1920×1080 a 30 fps, gravar sem redimensionar e usar `--config original`. Para o HUD padrão na posição do preset novo, a captura também precisa ser 1920×1080, e a taxa pode ser outra: o script lê o FPS do arquivo. Num arquivo de 30 fps, `1/fps` vale cerca de 0,0333 s e substitui a constante antiga `0.033`. Num arquivo de 60 fps, o passo é 1/60 s.
+Para repetir a gravação do autor: jogar Le Mans Ultimate no GeForce NOW em 1280×720 a 30 fps, gravar no OBS sem redimensionar e usar `--config lmu_gfn_720p`. Para o HUD padrão, a captura precisa ser 1920×1080 e o config é `lmu_default_1080p`. A taxa pode ser outra: o script lê o FPS do arquivo. Num arquivo de 30 fps, `1/fps` vale cerca de 0,0333 s e substitui a constante antiga `0.033`. Num arquivo de 60 fps, o passo é 1/60 s.
 
 O arquivo de exemplo do autor não está no Git. `.gitignore` ignora `test_telemetria.mp4` e nomes com esse prefixo. Sem `--video`, o script procura `test_telemetria.mp4` no diretório de trabalho.
 
@@ -145,7 +146,7 @@ Os recortes são fatias absolutas, no formato `[linha_inicial:linha_final, colun
 | Freio | rosa | `[575:677, 1053:1095]` | 102×42 px |
 | Velocidade | dígitos | `[610:640, 1128:1212]` | 30×84 px |
 
-As duas barras compartilham as colunas 1053:1095 e se sobrepõem nas linhas 585:677. A cor separa as séries. Em 1920×1080 esses retângulos ficam um pouco à direita do centro e um pouco abaixo do meio do quadro.
+As duas barras compartilham as colunas 1053:1095 e se sobrepõem nas linhas 585:677. A cor separa as séries. Estes números são os da primeira versão do script, não os da captura de 1280×720.
 
 ### Preset `lmu_default_1080p`
 
@@ -157,7 +158,17 @@ As duas barras compartilham as colunas 1053:1095 e se sobrepõem nas linhas 585:
 
 O freio ocupa as colunas 1565:1592 e o acelerador as colunas 1590:1615: lado a lado, freio à esquerda. Os dois se encostam em duas colunas. A velocidade fica imediatamente à direita.
 
-A faixa verde é HSV `[35, 40, 40]` a `[85, 255, 255]`. A faixa rosa é HSV `[140, 80, 80]` a `[179, 255, 255]`, nos dois presets. O limite antigo de matiz 168 deixava o freio do HUD padrão quase vazio, porque a barra medida fica em torno de 172.
+### Preset `lmu_gfn_720p`
+
+| Sinal | Cor no HUD | Recorte (linhas, colunas) | Tamanho |
+| --- | --- | --- | --- |
+| Acelerador | verde | `[585:678, 1070:1088]` | 93×18 px |
+| Freio | rosa | `[548:672, 1064:1078]` | 124×14 px |
+| Velocidade | dígitos KPH | `[608:655, 1140:1235]` | 47×95 px |
+
+O freio ocupa as colunas 1064:1078 e o acelerador as colunas 1070:1088: lado a lado, freio à esquerda, no arco interno esquerdo do dial. O arquivo `configs/config_gfn_720p.json` repete estes três recortes para `--config`.
+
+A faixa verde é HSV `[35, 40, 40]` a `[85, 255, 255]`. A faixa rosa é HSV `[140, 80, 80]` a `[179, 255, 255]`, em todos os presets. O limite antigo de matiz 168 deixava o freio do HUD padrão quase vazio, porque a barra medida fica em torno de 172.
 
 O OCR só aceita texto formado só por dígitos. Um rótulo com unidade (`163 KPH` num único trecho), espaço ou casa decimal é rejeitado por `text.isdigit()`.
 
@@ -175,13 +186,23 @@ O OCR só aceita texto formado só por dígitos. Um rótulo com unidade (`163 KP
 
 ## Como executar
 
-Com o ambiente ativado, a gravação do GeForce NOW no preset original:
+Captura do autor no GeForce NOW (1280×720, 30 fps), gráfico em PNG e série em CSV, sem janela:
+
+```bash
+python leitor.py --video video.mp4 --config lmu_gfn_720p --headless --png telemetria.png --csv telemetria.csv
+```
+
+O mesmo recorte lido do JSON:
+
+```bash
+python leitor.py --video video.mp4 --config configs/config_gfn_720p.json --headless --png telemetria.png --csv telemetria.csv
+```
+
+Sem argumentos, o script procura `test_telemetria.mp4` e usa o preset `original`:
 
 ```bash
 python leitor.py --video test_telemetria.mp4 --config original
 ```
-
-O mesmo comando sem argumentos procura `test_telemetria.mp4` e usa `original`.
 
 HUD padrão, gráfico em PNG e série em CSV, sem janela:
 
@@ -224,7 +245,7 @@ O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acele
 
 - A telemetria nativa de Le Mans Ultimate não entra no fluxo. O gráfico mostra o que foi lido do vídeo.
 - O script não abre a sessão na nuvem. Sem um arquivo já gravado, não há o que processar.
-- Cada preset vale para um enquadramento. `original` e `lmu_default_1080p` não são intercambiáveis: no HUD padrão, os recortes antigos não caem nas barras.
+- Cada preset vale para um enquadramento. `lmu_gfn_720p` é a captura de 1280×720; `lmu_default_1080p` é o HUD padrão em 1920×1080. Trocar o preset no vídeo errado faz os recortes caírem fora das barras.
 - O arco vermelho de RPM pode invadir a faixa rosa e contar como freio em alguns quadros do HUD padrão.
 - Compressão e bitrate do stream mudam a cor das barras e a nitidez dos dígitos.
 - Outra resolução ou outra escala da janela desloca o HUD e os recortes leem o lugar errado.
@@ -242,7 +263,7 @@ Os quatro diagramas UML pedidos na metodologia do trabalho prático estão em [`
 
 ## O que o autor precisa revisar
 
-- A redação de RP01–RP04, para o tom do TCC. Já estão confirmados o jogo (Le Mans Ultimate), o GeForce NOW em 1920×1080 a 30 fps para o preset `original`, e o HUD padrão em 1920×1080 a 60 fps para o preset `lmu_default_1080p`.
+- A redação de RP01–RP04, para o tom do TCC. Já estão confirmados o jogo (Le Mans Ultimate), a captura do autor no GeForce NOW em 1280×720 a 30 fps (preset `lmu_gfn_720p`, OBS, Fuji Speedway) e o HUD padrão em 1920×1080 a 60 fps para o preset `lmu_default_1080p`.
 - A seção de justificativa das ferramentas, para que ela descreva a escolha que de fato foi feita.
 - A faixa verde e o limiar padrão 0,5. A faixa rosa `[140, 80, 80]`–`[179, 255, 255]` foi a correção aprovada para a matiz medida perto de 172.
 - Se o percentual relativo ao máximo da gravação é a grandeza que o gráfico deve mostrar, ou se a escala deveria ser a altura cheia da barra.
