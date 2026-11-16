@@ -3,5 +3,7 @@
   "freio": [582, 681, 1063, 1082],
   "velocidade": [608, 655, 1140, 1235],
   "area_acelerador": 380,
-  "area_freio": 369
+  "area_freio": 369,
+  "cronometro": [96, 117, 1200, 1268],
+  "numero_volta": [22, 42, 1236, 1268]
 }

@@ -258,6 +258,25 @@ O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acele
 - Não há comparação automática com uma telemetria de referência.
 - Sem `--headless`, a janela exige um backend interativo do Matplotlib.
 
+## Separação automática de voltas
+
+Com o preset `lmu_gfn_720p` (ou um JSON com a chave `cronometro`), o script também lê o tempo da volta atual ("Atual", canto superior direito do HUD, recorte `[96:117, 1200:1268]`) e o número da volta ("Volta", `[22:42, 1236:1268]`).
+
+- **Leitura.** O cronômetro passa pelo EasyOCR a cada `--passo-cronometro` quadros (padrão 5). Cada leitura `v` no quadro `q` implica um início de volta em `q/fps − v`; dentro de uma volta esse valor é constante, o que permite descartar erros de leitura.
+- **Fim da volta.** Ao cruzar a linha, o Le Mans Ultimate congela o tempo oficial da volta no "Atual" por cerca de 10 s. Três leituras iguais entre as cinco últimas confirmam o fim; o script então lê quadro a quadro o trecho anterior e marca como limite o primeiro quadro em que o cronômetro atingiu o tempo oficial. A volta é fechada, gravada em `saida/volta_NN.csv` (NN = número da volta no HUD) e a distância e as séries recomeçam do zero. Se o tempo cai sem congelar (volta invalidada), o limite vem do início implícito das leituras novas.
+- **Voltas inválidas (não são gravadas).** O cronômetro some por `--invalida-apos` segundos seguidos ou mais (padrão 8; no vídeo do TCC o HUD mostra "-" por até ~5 s em voltas válidas, ao exibir o delta de setor), ou o tempo para enquanto o vídeo continua (pausa do jogo: o menu esconde o HUD e o cronômetro volta atrasado). A volta de saída (antes do primeiro reinício) e a volta final incompleta também não são gravadas.
+- **Resumo.** `saida/voltas.csv` traz `volta, quadro_inicio, quadro_fim, tempo_hud_s, tempo_video_s, valida, motivo, distancia_m, maior_ausencia_cronometro_s, arquivo`.
+- **Percentuais por volta.** Em `volta_NN.csv`, acelerador e freio são normalizados com a série da própria volta (`--normalizacao`), e a coluna `quadro` é o índice do quadro no vídeo inteiro.
+
+```bash
+python leitor.py --video sessao.mp4 --headless --saida-voltas saida --png-voltas
+python leitor.py --video volta.mp4 --sem-voltas --headless --csv volta.csv   # comportamento anterior
+```
+
+Teste de regressão do detector (sem OCR, reproduz as leituras gravadas do vídeo do TCC): `python avaliacao/teste_detector_voltas.py`.
+
+O vídeo inteiro continua gerando o gráfico e o `--csv` de antes. Sem `--headless`, use `--png-voltas` com cuidado: o gráfico por volta força o backend sem janela.
+
 ## Avaliação (TCC)
 
 A pasta `avaliacao/busca/` traz o registro da busca bibliográfica do TCC (respostas das APIs OpenAlex e Semantic Scholar e os scripts que as consultaram).

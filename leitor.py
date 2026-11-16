@@ -13,12 +13,27 @@ Revisão de nov. 2026 (avaliação do TCC):
   max e fixa, esta pela área da barra plena informada no preset ou no JSON);
 - o OCR ganhou checagem de faixa plausível e de salto máximo entre quadros,
   e o motivo de cada rejeição vai para o CSV.
+
+Separação de voltas (nov. 2026):
+- quando o preset tem o recorte "cronometro" (tempo da volta atual, no canto
+  superior direito do HUD), o script lê esse tempo por OCR a cada N quadros;
+- ao cruzar a linha, o tempo congela no tempo oficial da volta; o script
+  confirma o congelamento, refina quadro a quadro o instante em que o tempo
+  atingiu esse valor, fecha a volta e grava saida/volta_NN.csv (e o PNG, se
+  pedido), recomeçando a distância do zero;
+- se o cronômetro some por mais que --invalida-apos segundos durante a volta,
+  ou se o tempo para enquanto o vídeo continua (pausa do jogo), a volta é
+  marcada como inválida e não é gravada; a volta de saída (antes do primeiro
+  reinício) e a volta final incompleta também não são gravadas;
+- voltas.csv resume todas as voltas detectadas.
 """
 
 import argparse
 import csv
+import re
 import sys
 import json
+from collections import Counter, deque
 from pathlib import Path
 
 import cv2 as cv
@@ -58,6 +73,10 @@ PRESETS = {
         "velocidade": (608, 655, 1140, 1235),
         "area_acelerador": 380,
         "area_freio": 369,
+        # Tempo da volta atual ("Atual", canto superior direito) e número da
+        # volta ("Volta"), usados na separação automática de voltas.
+        "cronometro": (96, 117, 1200, 1268),
+        "numero_volta": (22, 42, 1236, 1268),
     },
     # HUD padrão do Le Mans Ultimate em 1920×1080: dial no canto inferior direito.
     # Freio à esquerda, acelerador à direita, no arco esquerdo do dial.
@@ -70,6 +89,7 @@ PRESETS = {
 
 CHAVES_ROI = ("acelerador", "freio", "velocidade")
 CHAVES_AREA = ("area_acelerador", "area_freio")
+CHAVES_OPCIONAIS = ("cronometro", "numero_volta")
 
 # Limites do filtro do OCR. A maior variação observada nas três voltas do TCC
 # foi de 6 km/h entre quadros consecutivos (30 fps); 15 km/h por quadro deixa
@@ -79,6 +99,14 @@ SALTO_MAXIMO_PADRAO = 15.0
 # Depois de tantas rejeições seguidas por salto, a próxima leitura dentro da
 # faixa é aceita, para o filtro não travar num valor errado.
 REJEICOES_PARA_REINICIAR = 15
+
+# Separação de voltas. No vídeo do TCC, o "Atual" some por até ~5 s em voltas
+# válidas (o HUD mostra "-" enquanto exibe o delta de setor); 8 s deixa folga.
+PASSO_CRONOMETRO_PADRAO = 5
+INVALIDA_APOS_PADRAO = 8.0
+TOLERANCIA_INICIO_S = 0.2   # concordância entre leituras do mesmo cronômetro
+DESVIO_PAUSA_S = 0.5        # atraso do cronômetro em relação ao vídeo = pausa
+REINICIO_MINIMO_S = 20.0    # um reinício real atrasa o cronômetro em quase uma volta inteira
 
 
 def interpretar_recorte(valor):
@@ -101,6 +129,9 @@ def carregar_rois(config):
         for chave in CHAVES_AREA:
             if chave in dados:
                 rois[chave] = float(dados[chave])
+        for chave in CHAVES_OPCIONAIS:
+            if chave in dados:
+                rois[chave] = interpretar_recorte(dados[chave])
         return rois
     if config not in PRESETS:
         nomes = ", ".join(PRESETS)
@@ -159,6 +190,191 @@ def filtrar_leitura(texto, confianca, limiar, anterior, quadros_desde, rejeicoes
         if abs(valor - anterior) > salto_max * max(1, quadros_desde):
             return False, "salto"
     return True, "aceito"
+
+
+def ler_tempo(texto):
+    """Converte a leitura do cronômetro (M:SS.mmm) em segundos.
+
+    O OCR costuma perder os separadores ("023.359"), então só os dígitos
+    contam: 6 dígitos = M SS mmm. Outros formatos são descartados.
+    """
+    digitos = re.sub(r"\D", "", str(texto))
+    if len(digitos) != 6:
+        return None
+    minutos, segundos, milesimos = int(digitos[0]), int(digitos[1:3]), int(digitos[3:])
+    if segundos >= 60:
+        return None
+    return minutos * 60 + segundos + milesimos / 1000
+
+
+def ocr_cronometro(reader, recorte_bgr):
+    resultado = reader.readtext(
+        cv.cvtColor(recorte_bgr, cv.COLOR_BGR2RGB), allowlist="0123456789:."
+    )
+    return ler_tempo("".join(texto for _b, texto, _c in resultado))
+
+
+def ocr_numero_volta(reader, recorte_bgr):
+    ampliado = cv.resize(recorte_bgr, None, fx=2, fy=2, interpolation=cv.INTER_CUBIC)
+    resultado = reader.readtext(cv.cvtColor(ampliado, cv.COLOR_BGR2RGB), allowlist="0123456789")
+    texto = "".join(t for _b, t, c in resultado if c > 0.5)
+    return int(texto) if texto.isdigit() and 0 < int(texto) < 1000 else None
+
+
+class DetectorVoltas:
+    """Acompanha o cronômetro do HUD e decide onde cada volta começa e termina.
+
+    Cada leitura válida v no quadro q implica um início de volta em q/fps - v.
+    Dentro de uma volta esse início é constante; ele muda quando a volta
+    reinicia (o tempo cai) ou quando o jogo pausa (o tempo para e o vídeo não).
+    Ao cruzar a linha, o HUD congela o tempo oficial por alguns segundos:
+    três leituras iguais seguidas confirmam o fim da volta.
+    """
+
+    def __init__(self, fps, passo):
+        self.fps = fps
+        self.passo = passo
+        self.inicio = None          # quadro de início da volta atual (None = volta de saída)
+        self.inicios = []           # inícios implícitos (s) das leituras vivas da volta
+        self.ultima = None          # (quadro, valor) da última leitura viva
+        self.recentes = deque(maxlen=5)  # últimas leituras válidas, para achar o congelamento
+        self.congelado = False      # exibindo o tempo oficial da volta que acabou
+        self.limite_s = None        # início (s) da volta que começou no último congelamento
+        self.pendente = None        # mudança aguardando confirmação
+        self.ultimo_visivel = None
+        self.reiniciar_estatisticas()
+
+    def reiniciar_estatisticas(self):
+        self.maior_ausencia = 0.0
+        self.pausa = 0.0
+        self.numeros = Counter()
+
+    def _referencia(self):
+        return float(np.median(self.inicios)) if self.inicios else None
+
+    def amostra(self, quadro, valor):
+        """Processa uma leitura amostrada. Devolve um evento ou None.
+
+        Eventos: ("fim", quadro_aprox, tempo_hud, refinar) quando uma volta termina;
+        ("inicio", quadro) quando o cronômetro aparece zerando sem volta anterior.
+        Depois de um "fim", quem chama deve chamar fechar(quadro_final).
+        """
+        if valor is None:
+            if self.ultimo_visivel is not None:
+                ausencia = (quadro - self.ultimo_visivel) / self.fps
+                self.maior_ausencia = max(self.maior_ausencia, ausencia)
+            return None
+        ausencia = 0.0 if self.ultimo_visivel is None else (quadro - self.ultimo_visivel) / self.fps
+        self.ultimo_visivel = quadro
+        inicio_novo = quadro / self.fps - valor
+
+        if self.congelado:
+            # Ignora o tempo congelado (e erros de leitura dele) até o
+            # cronômetro voltar a correr a partir do início da nova volta.
+            if self.limite_s is not None and abs(inicio_novo - self.limite_s) < 1.0:
+                self.congelado = False
+                self.inicios = [inicio_novo]
+                self.ultima = (quadro, valor)
+                self.recentes.clear()
+            return None
+
+        self.recentes.append((quadro, valor))
+        iguais = [q for q, v in self.recentes if v == valor]
+        referencia = self._referencia()
+        if len(iguais) >= 3 and valor > 30:
+            primeiro = iguais[0]
+            coerente = referencia is None or abs(primeiro / self.fps - valor - referencia) < DESVIO_PAUSA_S
+            if coerente:
+                self.congelado = True
+                self.pendente = None
+                self.recentes.clear()
+                return ("fim", primeiro, valor, True)
+
+        if self.pendente is not None:
+            tipo, s_cand = self.pendente
+            self.pendente = None
+            if abs(inicio_novo - s_cand) < TOLERANCIA_INICIO_S:
+                self.ultima = (quadro, valor)
+                if tipo == "pausa":
+                    self.pausa += s_cand - referencia
+                    self.inicios = [inicio_novo]
+                    return None
+                limite = int(round(s_cand * self.fps))
+                self.inicios = [inicio_novo]
+                if tipo == "primeira" or self.inicio is None:
+                    self.inicio = limite
+                    self.reiniciar_estatisticas()
+                    return ("inicio", limite)
+                return ("fim", limite, None, False)
+
+        if referencia is None:
+            if self.inicio is None and self.ultima is None:
+                self.pendente = ("primeira", inicio_novo)
+            else:
+                self.inicios.append(inicio_novo)
+                self.ultima = (quadro, valor)
+            return None
+        desvio = inicio_novo - referencia
+        if desvio > DESVIO_PAUSA_S:
+            if desvio >= REINICIO_MINIMO_S:
+                # O tempo caiu quase uma volta: a volta reiniciou sem exibir o
+                # tempo congelado (acontece quando a volta foi invalidada).
+                self.pendente = ("reinicio", inicio_novo)
+            elif ausencia >= 0.8 * desvio - 0.3:
+                # O cronômetro sumiu e voltou atrasado: o jogo ficou pausado.
+                self.pendente = ("pausa", inicio_novo)
+            # Caso contrário, é erro de leitura (ex.: 7 lido como 1); descartado.
+            return None
+        if desvio < -DESVIO_PAUSA_S:
+            return None  # leitura incoerente (troca de dígito); descartada
+        self.inicios.append(inicio_novo)
+        self.inicios = self.inicios[-30:]
+        self.ultima = (quadro, valor)
+        return None
+
+    def fechar(self, limite):
+        """Registra o novo início e devolve as estatísticas da volta que terminou."""
+        estatisticas = {
+            "maior_ausencia_s": round(self.maior_ausencia, 2),
+            "pausa_s": round(self.pausa, 2),
+            "numero_hud": self.numeros.most_common(1)[0][0] if self.numeros else None,
+        }
+        self.inicio = limite
+        self.limite_s = limite / self.fps
+        if not self.congelado:
+            self.inicios = [self.limite_s]
+        self.reiniciar_estatisticas()
+        return estatisticas
+
+
+def refinar_limite(reader, buffer, tempo_hud, quadro_aprox, passo):
+    """Primeiro quadro do buffer cujo cronômetro já atingiu o tempo oficial."""
+    for quadro, recorte in buffer:
+        if quadro < quadro_aprox - 2 * passo:
+            continue
+        valor = ocr_cronometro(reader, recorte)
+        if valor is not None and tempo_hud - 0.0005 <= valor <= tempo_hud + 0.1:
+            return quadro
+    return quadro_aprox
+
+
+def gravar_volta(caminho, quadros, dt, velocidades, px_acel, px_freio, status_ocr,
+                 normalizacao, rois):
+    """Grava uma volta com distância recomeçando do zero e percentuais da própria volta."""
+    distancia = np.cumsum(np.asarray(velocidades, dtype=float) / 3.6 * dt)
+    acel = percentual(px_acel, normalizacao, rois.get("area_acelerador"))
+    freio = percentual(px_freio, normalizacao, rois.get("area_freio"))
+    with open(caminho, "w", newline="", encoding="utf-8") as arquivo:
+        escritor = csv.writer(arquivo)
+        escritor.writerow(
+            ["quadro", "tempo_s", "distancia_m", "velocidade_kmh", "acelerador_pct",
+             "freio_pct", "px_acelerador", "px_freio", "ocr_status"]
+        )
+        for i, quadro in enumerate(quadros):
+            escritor.writerow([quadro, round((i + 1) * dt, 4), round(float(distancia[i]), 3),
+                               velocidades[i], round(float(acel[i]), 3), round(float(freio[i]), 3),
+                               px_acel[i], px_freio[i], status_ocr[i]])
+    return distancia, acel, freio
 
 
 def gravar_csv(caminho, tempo, distancia, velocidade, acelerador, freio,
@@ -250,6 +466,33 @@ def parse_args():
         default=None,
         help="Se informado, grava tempo, distância, velocidade e percentuais neste CSV.",
     )
+    parser.add_argument(
+        "--sem-voltas",
+        action="store_true",
+        help="Não separa voltas, mesmo que o preset tenha o recorte do cronômetro.",
+    )
+    parser.add_argument(
+        "--saida-voltas",
+        default="saida",
+        help="Pasta dos arquivos volta_NN.csv e voltas.csv (padrão: saida).",
+    )
+    parser.add_argument(
+        "--passo-cronometro",
+        type=int,
+        default=PASSO_CRONOMETRO_PADRAO,
+        help="Lê o cronômetro a cada N quadros; o limite da volta é refinado quadro a quadro (padrão: 5).",
+    )
+    parser.add_argument(
+        "--invalida-apos",
+        type=float,
+        default=INVALIDA_APOS_PADRAO,
+        help="Segundos seguidos sem cronômetro visível para invalidar a volta (padrão: 8).",
+    )
+    parser.add_argument(
+        "--png-voltas",
+        action="store_true",
+        help="Grava também o gráfico de cada volta válida (volta_NN.png).",
+    )
     return parser.parse_args()
 
 
@@ -279,6 +522,61 @@ def main():
     rejeicoes_seguidas = 0
     status_ocr = []
     contagem_status = {}
+
+    cronometro = None if args.sem_voltas else rois.get("cronometro")
+    if cronometro is not None:
+        # O modelo só em inglês lê os dígitos do cronômetro melhor que o de pt+en.
+        leitor_cronometro = easyocr.Reader(["en"], verbose=False)
+        yc1, yc2, xc1, xc2 = cronometro
+        numero_roi = rois.get("numero_volta")
+        passo = max(1, args.passo_cronometro)
+        detector = DetectorVoltas(fps, passo)
+        buffer_cronometro = deque(maxlen=6 * passo + 2)
+        pasta_voltas = Path(args.saida_voltas)
+        pasta_voltas.mkdir(parents=True, exist_ok=True)
+        voltas = []
+        inicio_atual = None
+
+    def registrar_volta(inicio, fim, tempo_hud, estatisticas, motivo_extra=None):
+        indices = range(inicio, fim)
+        vel = [velocidades[i] for i in indices]
+        distancia_volta = float(np.sum(np.asarray(vel, dtype=float) / 3.6 * dt)) if vel else 0.0
+        motivos = []
+        if motivo_extra:
+            motivos.append(motivo_extra)
+        if estatisticas and estatisticas["maior_ausencia_s"] >= args.invalida_apos:
+            motivos.append(f"cronômetro ausente por {estatisticas['maior_ausencia_s']:.1f} s")
+        if estatisticas and estatisticas["pausa_s"] > 0:
+            motivos.append(f"pausa de {estatisticas['pausa_s']:.1f} s")
+        numero = (estatisticas or {}).get("numero_hud")
+        if numero is None:
+            numero = len(voltas) + 1
+        registro = {
+            "volta": numero,
+            "quadro_inicio": inicio,
+            "quadro_fim": fim,
+            "tempo_hud_s": "" if tempo_hud is None else f"{tempo_hud:.3f}",
+            "tempo_video_s": f"{(fim - inicio) * dt:.3f}",
+            "valida": "nao" if motivos else "sim",
+            "motivo": "; ".join(motivos),
+            "distancia_m": f"{distancia_volta:.2f}",
+            "maior_ausencia_cronometro_s": (estatisticas or {}).get("maior_ausencia_s", ""),
+            "arquivo": "",
+        }
+        if not motivos:
+            nome = pasta_voltas / f"volta_{numero:02d}.csv"
+            dist, acel, frei = gravar_volta(
+                nome, list(indices), dt, vel, [pixels_acel[i] for i in indices],
+                [pixels_freio[i] for i in indices], [status_ocr[i] for i in indices],
+                args.normalizacao, rois,
+            )
+            registro["arquivo"] = str(nome)
+            if args.png_voltas:
+                desenhar(dist, acel, frei, True, str(nome.with_suffix(".png")))
+        voltas.append(registro)
+        estado = "válida" if not motivos else f"inválida ({registro['motivo']})"
+        print(f"volta {numero}: quadros {inicio}-{fim}, tempo HUD {registro['tempo_hud_s'] or '-'} s, "
+              f"{estado}{', gravada em ' + registro['arquivo'] if registro['arquivo'] else ''}", flush=True)
 
     while True:
         ret, frame = cap.read()
@@ -322,7 +620,48 @@ def main():
         velocidades.append(velocidade)
         tempos.append(len(distancias) * dt)
 
+        if cronometro is not None:
+            quadro = len(distancias) - 1
+            buffer_cronometro.append((quadro, frame[yc1:yc2, xc1:xc2].copy()))
+            if quadro % passo == 0:
+                if numero_roi is not None and detector.inicio is not None and quadro % (6 * passo) == 0:
+                    y1, y2, x1, x2 = numero_roi
+                    numero = ocr_numero_volta(leitor_cronometro, frame[y1:y2, x1:x2])
+                    if numero is not None:
+                        detector.numeros[numero] += 1
+                evento = detector.amostra(quadro, ocr_cronometro(leitor_cronometro, frame[yc1:yc2, xc1:xc2]))
+                if evento is not None and evento[0] == "inicio":
+                    limite = evento[1]
+                    if limite <= 0:
+                        inicio_atual = None  # a volta começou antes do vídeo: incompleta
+                    else:
+                        registrar_volta(0, limite, None, None, "volta de saída (antes do primeiro reinício)")
+                        inicio_atual = limite
+                elif evento is not None and evento[0] == "fim":
+                    _tipo, limite, tempo_hud, refinar = evento
+                    if refinar:
+                        limite = refinar_limite(leitor_cronometro, buffer_cronometro, tempo_hud, limite, passo)
+                    estatisticas = detector.fechar(limite)
+                    if inicio_atual is None:
+                        registrar_volta(0, limite, tempo_hud, None, "volta de saída (antes do primeiro reinício)")
+                    else:
+                        registrar_volta(inicio_atual, limite, tempo_hud, estatisticas)
+                    inicio_atual = limite
+
     cap.release()
+    if cronometro is not None and distancias:
+        if inicio_atual is None:
+            registrar_volta(0, len(distancias), None, None, "sem reinício do cronômetro no vídeo")
+        else:
+            registrar_volta(inicio_atual, len(distancias), None, detector.fechar(len(distancias)),
+                            "incompleta (o vídeo terminou)")
+        resumo_voltas = pasta_voltas / "voltas.csv"
+        with open(resumo_voltas, "w", newline="", encoding="utf-8") as arquivo:
+            escritor = csv.DictWriter(arquivo, fieldnames=list(voltas[0]))
+            escritor.writeheader()
+            escritor.writerows(voltas)
+        validas = sum(v["valida"] == "sim" for v in voltas)
+        print(f"voltas: {len(voltas)} detectadas, {validas} válidas; resumo em {resumo_voltas}", flush=True)
     if not distancias:
         raise SystemExit(f"O vídeo não tem quadros: {args.video}")
 
