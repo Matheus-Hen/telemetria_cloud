@@ -279,7 +279,11 @@ O vídeo inteiro continua gerando o gráfico e o `--csv` de antes. Sem `--headle
 
 ## Avaliação (TCC)
 
-A pasta `avaliacao/busca/` traz o registro da busca bibliográfica do TCC (respostas das APIs OpenAlex e Semantic Scholar e os scripts que as consultaram).
+A pasta [`avaliacao/`](avaliacao/README.md) traz a saída da ferramenta nas duas voltas válidas mais rápidas da sessão do autor (detectadas automaticamente), a anotação cega de 80 quadros feita pelo autor, os inícios de frenagem observados e o script `avaliar.py`, que recalcula presença, precisão, revocação, F1, erro nos quadros plenos, acerto do OCR, intervalos de confiança de 95% (Wilson e Clopper–Pearson), distância e início das frenagens sem o vídeo e só com a biblioteca padrão do Python:
+
+```bash
+python avaliacao/avaliar.py
+```
 
 ## Diagramas
 

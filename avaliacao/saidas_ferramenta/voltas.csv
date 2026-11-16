@@ -1,0 +1,11 @@
+volta,quadro_inicio,quadro_fim,tempo_hud_s,tempo_video_s,valida,motivo,distancia_m,maior_ausencia_cronometro_s,arquivo
+1,0,4298,,143.267,nao,volta de saída (antes do primeiro reinício),4258.81,,
+2,4298,8765,,148.900,nao,cronômetro ausente por 121.2 s,5137.91,121.17,
+3,8765,12286,117.386,117.367,sim,,4554.57,5.5,saida/volta_03.csv
+4,12286,15843,118.510,118.567,sim,,4580.18,5.67,saida/volta_04.csv
+5,15843,19292,114.992,114.967,sim,,4563.62,3.0,saida/volta_05.csv
+6,19292,22680,112.917,112.933,sim,,4576.74,1.67,saida/volta_06.csv
+7,22680,26236,114.164,118.533,nao,pausa de 4.4 s,4672.79,4.33,
+8,26236,30094,114.324,128.600,nao,cronômetro ausente por 16.7 s; pausa de 14.3 s,5109.55,16.67,
+9,30094,33398,110.075,110.133,sim,,4550.55,3.67,saida/volta_09.csv
+10,33398,34701,,43.433,nao,incompleta (o vídeo terminou); cronômetro ausente por 8.0 s,2010.71,8.0,
