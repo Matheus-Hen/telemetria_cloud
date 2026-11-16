@@ -81,27 +81,28 @@ Há dois blocos. O bloco do problema e do público registra o que o autor inform
 
 ### Requisitos funcionais
 
-Estes itens são o modo como o script cumpre a extração descrita em RP03.
+A numeração segue o capítulo de metodologia do TCC.
 
-- **RF01.** O sistema abre o vídeo indicado em `--video`. Sem o argumento, abre `test_telemetria.mp4`.
-- **RF02.** Para cada quadro, o sistema estima o acelerador pela quantidade de pixels verdes no recorte do preset ou do JSON, com HSV de `[35, 40, 40]` a `[85, 255, 255]`.
-- **RF03.** Para cada quadro, o sistema estima o freio pela quantidade de pixels rosa no recorte correspondente, com HSV de `[140, 80, 80]` a `[179, 255, 255]`.
-- **RF04.** O sistema lê a velocidade no recorte escolhido, com OCR em português e inglês, e aceita somente texto formado só por dígitos com confiança maior que `--confianca` (padrão 0,5), dentro da faixa 0–`--vel-max` e sem variação maior que `--salto-max` por quadro decorrido desde a última leitura aceita; cada rejeição é registrada com o motivo.
-- **RF05.** Quando o quadro não produz leitura aceita, o sistema conserva a última velocidade aceita. Até a primeira leitura aceita, a velocidade usada é 0.
-- **RF06.** Se o OCR devolve mais de um texto aceito no mesmo quadro, o sistema fica com o último item dessa lista.
-- **RF07.** A cada quadro, o sistema soma à distância `(velocidade_em_km/h / 3,6) * (1/fps)` metros. A taxa vem de `CAP_PROP_FPS`. Se ela falta ou é inválida, o sistema usa 30 fps.
-- **RF08.** Ao terminar o vídeo, o sistema converte cada série de pixels em percentual de uma referência: o percentil 99 da própria série (padrão), o máximo ou a área fixa da barra no preset. Referência 0 vira percentual 0.
-- **RF09.** O sistema exibe, ou grava em PNG com `--headless`, um gráfico de linha do percentual do acelerador (verde) e do freio (vermelho) em função da distância, com o título `Telemetria`, o eixo horizontal `Distância (m)` e o eixo vertical `% aceleração/freio`.
-- **RF10.** Com `--csv`, o sistema grava `tempo_s`, `distancia_m`, `velocidade_kmh`, `acelerador_pct`, `freio_pct`, `px_acelerador`, `px_freio` e `ocr_status`.
+- **RF01.** O sistema abre o arquivo de vídeo com a gravação do HUD do Le Mans Ultimate capturada da transmissão. Sem `--video`, abre `test_telemetria.mp4`.
+- **RF02.** Para cada quadro, o sistema estima a intensidade do acelerador pela quantidade de pixels verdes em uma região fixa do HUD (HSV `[35, 40, 40]` a `[85, 255, 255]`).
+- **RF03.** Para cada quadro, o sistema estima a intensidade do freio pela quantidade de pixels rosa em uma região fixa do HUD (HSV `[140, 80, 80]` a `[179, 255, 255]`), delimitada de modo a não incluir a imagem da pista. No preset `lmu_gfn_720p` o recorte é `[582:681, 1063:1082]`.
+- **RF04.** O sistema lê a velocidade por OCR em uma região fixa, aceitando apenas texto composto exclusivamente por dígitos, com confiança superior a 0,5, com valor na faixa plausível de 0 a 400 km/h e com variação de no máximo 15 km/h por quadro decorrido desde a última leitura aceita. O motivo de cada rejeição é registrado.
+- **RF05.** Quando um quadro não produz leitura aceita, o sistema conserva a última velocidade aceita e adota 0 até a primeira leitura válida.
+- **RF06.** Quando o OCR devolve mais de um texto aceito no mesmo quadro, o sistema adota o último da lista.
+- **RF07.** A cada quadro, o sistema acumula a distância percorrida a partir da velocidade: `(velocidade_em_km/h / 3,6) * (1/fps)` metros. A taxa vem de `CAP_PROP_FPS`; se falta ou é inválida, usa 30 fps.
+- **RF08.** Ao término do vídeo, o sistema converte cada série de pixels em percentual de uma referência: por padrão, o percentil 99 da própria série; opcionalmente, o máximo da série ou uma área fixa da barra plena informada na configuração. O percentual é limitado a 100%. Referência 0 vira percentual 0.
+- **RF09.** O sistema exibe um gráfico com os percentuais de acelerador (verde) e de freio (vermelho) em função da distância, em metros. Com `--headless`, o mesmo gráfico é gravado em PNG.
+- **RF10.** O sistema separa as voltas pelo cronômetro da volta atual exibido no HUD, gravando cada volta válida em um arquivo próprio, com a distância reiniciada em zero, e um resumo de todas as voltas. Não grava a volta em que o cronômetro desaparece por tempo prolongado, a volta em que o jogo é pausado, a volta de saída nem a volta final incompleta.
 
 ### Requisitos não funcionais
 
-- **RNF01.** O processamento dos quadros ocorre na máquina do piloto, em um único processo. Nenhuma credencial do GeForce NOW é necessária, porque a entrada já é o vídeo gravado.
-- **RNF02.** As faixas HSV e os idiomas do OCR são constantes no código. Recortes, limiar de confiança, vídeo, PNG e CSV entram pela linha de comando.
-- **RNF03.** Sem `--headless`, a saída do gráfico é a janela do Matplotlib. Com `--headless`, o gráfico vai para um PNG. O CSV é opcional.
-- **RNF04.** A instalação é a lista fixada em `requirements.txt`. O OCR acrescenta o download dos modelos na primeira execução. Argumentos, CSV e JSON usam a biblioteca padrão.
-- **RNF05.** O tempo de cada quadro inclui uma chamada de OCR. O hardware disponível para o PyTorch (CPU ou GPU) determina esse tempo.
-- **RNF06.** Cada preset vale para o enquadramento em que foi medido. A captura do autor no GeForce NOW é 1280×720; o HUD padrão conferido à parte é 1920×1080. Outra resolução ou outra escala da janela desloca o HUD. A compressão do stream altera cor e nitidez dos dígitos. A distância acompanha a taxa gravada no arquivo.
+- **RNF01.** O processamento ocorre na máquina do piloto, em um único processo, sem exigir credenciais de serviços de nuvem.
+- **RNF02.** Faixas HSV, idiomas do OCR e o limiar de confiança padrão (0,5) estão no código. As regiões de interesse são selecionáveis por presets nomeados. O passo de tempo é a taxa de quadros lida do vídeo.
+- **RNF03.** A saída inclui a janela gráfica do Matplotlib e, quando configurado (`--csv`, e os arquivos de volta), a exportação das séries em CSV. Com `--headless`, o gráfico do vídeo inteiro vai para PNG em vez da janela.
+- **RNF04.** A instalação é reproduzível a partir da lista de dependências com versões fixadas em `requirements.txt`.
+- **RNF05.** O tempo de processamento de cada quadro inclui uma chamada de OCR e depende do hardware disponível ao PyTorch (CPU ou GPU).
+- **RNF06.** O resultado numérico só é reprodutível em gravações cujo leiaute de HUD corresponda ao preset selecionado. A taxa de quadros é lida do arquivo. Alterar a resolução ou a escala da janela do cliente exige novo mapeamento. A captura do autor no GeForce NOW é 1280×720; o HUD padrão conferido à parte é 1920×1080.
+- **RNF07.** O sistema emite aviso quando uma região de interesse não contém nenhum pixel da cor esperada em todo o vídeo, situação típica de preset incompatível com a gravação.
 
 ### Fora do que o código faz hoje
 
@@ -246,8 +247,8 @@ O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acele
 - A telemetria nativa de Le Mans Ultimate não entra no fluxo. O gráfico mostra o que foi lido do vídeo.
 - O script não abre a sessão na nuvem. Sem um arquivo já gravado, não há o que processar.
 - Cada preset vale para um enquadramento. `lmu_gfn_720p` é a captura de 1280×720; `lmu_default_1080p` é o HUD padrão em 1920×1080. Trocar o preset no vídeo errado faz os recortes caírem fora das barras.
-- Um recorte que alcance a imagem da pista conta zebras e placas da mesma cor como freio ou acelerador. O aviso de recorte vazio não detecta esse caso.
-- O arco vermelho de RPM pode invadir a faixa rosa e contar como freio em alguns quadros do HUD padrão.
+- No preset `lmu_gfn_720p`, o recorte antigo do freio (`[548:672, 1064:1078]`) alcançava a zebra da pista acima do dial e contava essa zebra como freio. O recorte revisado (`[582:681, 1063:1082]`) começa abaixo dessa borda. Um recorte que ainda alcance a pista continua contando zebras; o aviso de recorte vazio não detecta esse caso.
+- No preset `lmu_default_1080p`, o arco vermelho de RPM pode invadir a faixa rosa e contar como freio em alguns quadros. Esse arco não é a causa da contaminação medida na captura de 1280×720.
 - Compressão e bitrate do stream mudam a cor das barras e a nitidez dos dígitos.
 - Outra resolução ou outra escala da janela desloca o HUD e os recortes leem o lugar errado.
 - A distância usa `1/fps` do arquivo. Se o contêiner mente a taxa, a distância sai na mesma proporção. Sem taxa válida, o passo assume 30 fps.
@@ -263,10 +264,10 @@ O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acele
 Com o preset `lmu_gfn_720p` (ou um JSON com a chave `cronometro`), o script também lê o tempo da volta atual ("Atual", canto superior direito do HUD, recorte `[96:117, 1200:1268]`) e o número da volta ("Volta", `[22:42, 1236:1268]`).
 
 - **Leitura.** O cronômetro passa pelo EasyOCR a cada `--passo-cronometro` quadros (padrão 5). Cada leitura `v` no quadro `q` implica um início de volta em `q/fps − v`; dentro de uma volta esse valor é constante, o que permite descartar erros de leitura.
-- **Fim da volta.** Ao cruzar a linha, o Le Mans Ultimate congela o tempo oficial da volta no "Atual" por cerca de 10 s. Três leituras iguais entre as cinco últimas confirmam o fim; o script então lê quadro a quadro o trecho anterior e marca como limite o primeiro quadro em que o cronômetro atingiu o tempo oficial. A volta é fechada, gravada em `saida/volta_NN.csv` (NN = número da volta no HUD) e a distância e as séries recomeçam do zero. Se o tempo cai sem congelar (volta invalidada), o limite vem do início implícito das leituras novas.
+- **Fim da volta.** Ao cruzar a linha, o Le Mans Ultimate congela o tempo oficial da volta no "Atual" por cerca de 10 s. Três leituras iguais entre as cinco últimas confirmam o fim; o script então lê quadro a quadro o trecho anterior e marca como limite o primeiro quadro em que o cronômetro atingiu o tempo oficial. A volta é fechada e gravada, e a distância e as séries recomeçam do zero. O arquivo é `saida/volta_seqNN_hudMM.csv`: NN é a ordem da volta na sessão (válida ou não) e MM é o número lido no HUD. Se o OCR do número falha, o nome fica `volta_seqNN_hudsem.csv`. Se esse caminho já existe, o script acrescenta `_2`, `_3` e assim por diante. O PNG de `--png-voltas` usa o mesmo radical. Se o tempo cai sem congelar (volta invalidada), o limite vem do início implícito das leituras novas.
 - **Voltas inválidas (não são gravadas).** O cronômetro some por `--invalida-apos` segundos seguidos ou mais (padrão 8; no vídeo do TCC o HUD mostra "-" por até ~5 s em voltas válidas, ao exibir o delta de setor), ou o tempo para enquanto o vídeo continua (pausa do jogo: o menu esconde o HUD e o cronômetro volta atrasado). A volta de saída (antes do primeiro reinício) e a volta final incompleta também não são gravadas.
-- **Resumo.** `saida/voltas.csv` traz `volta, quadro_inicio, quadro_fim, tempo_hud_s, tempo_video_s, valida, motivo, distancia_m, maior_ausencia_cronometro_s, arquivo`.
-- **Percentuais por volta.** Em `volta_NN.csv`, acelerador e freio são normalizados com a série da própria volta (`--normalizacao`), e a coluna `quadro` é o índice do quadro no vídeo inteiro.
+- **Resumo.** `saida/voltas.csv` traz `seq, volta, quadro_inicio, quadro_fim, tempo_hud_s, tempo_video_s, valida, motivo, distancia_m, maior_ausencia_cronometro_s, arquivo`. A coluna `volta` é o número do HUD e fica vazia quando o OCR não o leu. `arquivo` só é preenchido nas voltas válidas.
+- **Percentuais por volta.** Em `volta_seqNN_hudMM.csv`, acelerador e freio são normalizados com a série da própria volta (`--normalizacao`), e a coluna `quadro` é o índice do quadro no vídeo inteiro.
 
 ```bash
 python leitor.py --video sessao.mp4 --headless --saida-voltas saida --png-voltas

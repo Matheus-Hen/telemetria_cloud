@@ -36,6 +36,22 @@ def main():
         assert (t is None and te is None) or abs(t - te) < 1e-6, (t, te)
         print(f"fim {q:6d} (esperado {qe}) tempo HUD {t}  ausência máx {est['maior_ausencia_s']} s  pausa {est['pausa_s']} s")
     print("OK: detector reproduz as", len(ESPERADO), "trocas de volta")
+    testar_nomes_de_arquivo()
+
+
+def testar_nomes_de_arquivo():
+    """O nome junta a ordem da sessão ao número do HUD e não sobrescreve arquivo existente."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        pasta = Path(tmp)
+        primeiro = leitor.nome_arquivo_volta(pasta, 3, 5)
+        assert primeiro.name == "volta_seq03_hud05.csv", primeiro.name
+        primeiro.write_text("ocupado", encoding="utf-8")
+        repetido = leitor.nome_arquivo_volta(pasta, 3, 5)
+        assert repetido.name == "volta_seq03_hud05_2.csv", repetido.name
+        sem_hud = leitor.nome_arquivo_volta(pasta, 4, None)
+        assert sem_hud.name == "volta_seq04_hudsem.csv", sem_hud.name
+    print("OK: nomes de volta usam seq e número do HUD")
 
 
 if __name__ == "__main__":

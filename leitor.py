@@ -19,8 +19,9 @@ Separação de voltas (nov. 2026):
   superior direito do HUD), o script lê esse tempo por OCR a cada N quadros;
 - ao cruzar a linha, o tempo congela no tempo oficial da volta; o script
   confirma o congelamento, refina quadro a quadro o instante em que o tempo
-  atingiu esse valor, fecha a volta e grava saida/volta_NN.csv (e o PNG, se
-  pedido), recomeçando a distância do zero;
+  atingiu esse valor, fecha a volta e grava saida/volta_seqNN_hudMM.csv
+  (índice sequencial e número lido no HUD; o PNG, se pedido), recomeçando
+  a distância do zero;
 - se o cronômetro some por mais que --invalida-apos segundos durante a volta,
   ou se o tempo para enquanto o vídeo continua (pausa do jogo), a volta é
   marcada como inválida e não é gravada; a volta de saída (antes do primeiro
@@ -37,15 +38,16 @@ from collections import Counter, deque
 from pathlib import Path
 
 import cv2 as cv
-import matplotlib
 import numpy as np
-import easyocr
 
 # Faixas HSV no padrão do OpenCV (matiz de 0 a 179).
 VERDE_INFERIOR = np.array([35, 40, 40])
 VERDE_SUPERIOR = np.array([85, 255, 255])
-# O freio do HUD padrão fica em torno da matiz 172, acima do limite antigo 168.
-# O arco vermelho de RPM pode entrar nessa faixa e contaminar o freio em alguns quadros.
+# A matiz do freio no HUD padrão (lmu_default_1080p) fica em torno de 172,
+# acima do limite antigo 168. Nesse preset, o arco vermelho de RPM pode
+# entrar nessa faixa e contaminar o freio. No preset lmu_gfn_720p a
+# contaminação vinha da zebra da pista acima do dial, não do arco de RPM;
+# o recorte [582:681, 1063:1082] deixa essa zebra de fora.
 ROSA_INFERIOR = np.array([140, 80, 80])
 ROSA_SUPERIOR = np.array([179, 255, 255])
 
@@ -358,6 +360,28 @@ def refinar_limite(reader, buffer, tempo_hud, quadro_aprox, passo):
     return quadro_aprox
 
 
+def criar_leitor_ocr(idiomas, verbose=True):
+    """Importa o EasyOCR só aqui, para o teste do detector rodar sem PyTorch."""
+    import easyocr
+    return easyocr.Reader(list(idiomas), verbose=verbose)
+
+
+def nome_arquivo_volta(pasta, seq, numero_hud):
+    """Índice sequencial mais o número do HUD, com sufixo se o nome já existir.
+
+    Sem número lido no HUD, o trecho fica `hudsem`. Dois arquivos com o mesmo
+    seq e o mesmo número (uma execução anterior na pasta) ganham _2, _3, ...
+    """
+    hud = f"{int(numero_hud):02d}" if numero_hud is not None else "sem"
+    base = f"volta_seq{seq:02d}_hud{hud}"
+    candidato = Path(pasta) / f"{base}.csv"
+    extra = 2
+    while candidato.exists():
+        candidato = Path(pasta) / f"{base}_{extra}.csv"
+        extra += 1
+    return candidato
+
+
 def gravar_volta(caminho, quadros, dt, velocidades, px_acel, px_freio, status_ocr,
                  normalizacao, rois):
     """Grava uma volta com distância recomeçando do zero e percentuais da própria volta."""
@@ -391,6 +415,7 @@ def gravar_csv(caminho, tempo, distancia, velocidade, acelerador, freio,
 
 
 def desenhar(distancia, acelerador, freio, headless, png):
+    import matplotlib
     if headless:
         matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
@@ -474,7 +499,7 @@ def parse_args():
     parser.add_argument(
         "--saida-voltas",
         default="saida",
-        help="Pasta dos arquivos volta_NN.csv e voltas.csv (padrão: saida).",
+        help="Pasta dos arquivos volta_seqNN_hudMM.csv e voltas.csv (padrão: saida).",
     )
     parser.add_argument(
         "--passo-cronometro",
@@ -491,7 +516,7 @@ def parse_args():
     parser.add_argument(
         "--png-voltas",
         action="store_true",
-        help="Grava também o gráfico de cada volta válida (volta_NN.png).",
+        help="Grava também o gráfico de cada volta válida (mesmo nome do CSV, em PNG).",
     )
     return parser.parse_args()
 
@@ -503,7 +528,7 @@ def main():
     yf1, yf2, xf1, xf2 = rois["freio"]
     yo1, yo2, xo1, xo2 = rois["velocidade"]
 
-    reader = easyocr.Reader(["pt", "en"])
+    reader = criar_leitor_ocr(["pt", "en"])
     cap = cv.VideoCapture(args.video)
     if not cap.isOpened():
         raise SystemExit(f"Não foi possível abrir o vídeo: {args.video}")
@@ -526,7 +551,7 @@ def main():
     cronometro = None if args.sem_voltas else rois.get("cronometro")
     if cronometro is not None:
         # O modelo só em inglês lê os dígitos do cronômetro melhor que o de pt+en.
-        leitor_cronometro = easyocr.Reader(["en"], verbose=False)
+        leitor_cronometro = criar_leitor_ocr(["en"], verbose=False)
         yc1, yc2, xc1, xc2 = cronometro
         numero_roi = rois.get("numero_volta")
         passo = max(1, args.passo_cronometro)
@@ -549,10 +574,10 @@ def main():
         if estatisticas and estatisticas["pausa_s"] > 0:
             motivos.append(f"pausa de {estatisticas['pausa_s']:.1f} s")
         numero = (estatisticas or {}).get("numero_hud")
-        if numero is None:
-            numero = len(voltas) + 1
+        seq = len(voltas) + 1
         registro = {
-            "volta": numero,
+            "seq": seq,
+            "volta": "" if numero is None else numero,
             "quadro_inicio": inicio,
             "quadro_fim": fim,
             "tempo_hud_s": "" if tempo_hud is None else f"{tempo_hud:.3f}",
@@ -564,7 +589,7 @@ def main():
             "arquivo": "",
         }
         if not motivos:
-            nome = pasta_voltas / f"volta_{numero:02d}.csv"
+            nome = nome_arquivo_volta(pasta_voltas, seq, numero)
             dist, acel, frei = gravar_volta(
                 nome, list(indices), dt, vel, [pixels_acel[i] for i in indices],
                 [pixels_freio[i] for i in indices], [status_ocr[i] for i in indices],
@@ -575,7 +600,7 @@ def main():
                 desenhar(dist, acel, frei, True, str(nome.with_suffix(".png")))
         voltas.append(registro)
         estado = "válida" if not motivos else f"inválida ({registro['motivo']})"
-        print(f"volta {numero}: quadros {inicio}-{fim}, tempo HUD {registro['tempo_hud_s'] or '-'} s, "
+        print(f"volta seq {seq} (HUD {registro['volta'] or '-'}): quadros {inicio}-{fim}, tempo HUD {registro['tempo_hud_s'] or '-'} s, "
               f"{estado}{', gravada em ' + registro['arquivo'] if registro['arquivo'] else ''}", flush=True)
 
     while True:
