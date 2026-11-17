@@ -1,5 +1,7 @@
 # Diagramas UML do leitor de telemetria
 
+> **Atualização (nov. 2026):** as figuras e os `.puml` desta pasta foram refeitos para a versão revisada (recorte do freio sem a pista, normalização p99, filtro do OCR, separação de voltas pelo cronômetro com gravação por volta e regra de invalidação, aviso de recorte sem cor e comprimento obrigatório da pista, RF11). Os parágrafos abaixo descrevem a primeira versão; o texto atualizado de cada diagrama está na seção de modelagem do TCC.
+
 As quatro figuras desta pasta foram desenhadas a partir de `leitor.py`. Cada seção traz a imagem e, em seguida, um parágrafo que pode ser copiado para o capítulo de Metodologia. A numeração (Figura X) fica a cargo do texto do TCC. Sugestão de crédito sob a figura, porque o desenho é de autoria do trabalho: **Elaborada pelo autor.**
 
 O script é procedural. O diagrama de classes não descreve classes declaradas no código; ele organiza os dados e as responsabilidades que o script exerce. Essa ressalva está no parágrafo correspondente e também na própria figura.

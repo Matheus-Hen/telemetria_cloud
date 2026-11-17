@@ -1,122 +1,114 @@
 @startuml diagrama-classes
+!pragma layout smetana
 skinparam shadowing false
 skinparam dpi 140
 skinparam backgroundColor white
 skinparam classAttributeIconSize 0
-skinparam wrapWidth 200
-skinparam ranksep 28
-skinparam nodesep 16
+skinparam wrapWidth 220
 hide circle
+left to right direction
 
-title Diagrama de classes lógico — leitor de telemetria
+title Diagrama de classes lógico — leitor de telemetria (versão revisada)
 
 note as Escopo
-  leitor.py é um script procedural e não declara classes.
-  Cada retângulo reúne dados e responsabilidades
-  que o script de fato exerce. As ligações são de uso,
-  não objetos criados no código.
+  leitor.py é um script procedural; só DetectorVoltas é classe no código.
+  Os demais retângulos reúnem dados e funções que o script exerce.
+  As ligações são de uso.
 end note
 
 class LeitorTelemetria <<script>> {
   executar()
+  avisarRecorteVazio(): RNF07
+}
+
+class Preset {
+  nome = "lmu_gfn_720p"
+  acelerador, freio, velocidade
+  cronometro, numeroVolta
+  areaAcelerador, areaFreio
 }
 
 class CapturaDeVideo {
-  caminho = "test_telemetria.mp4"
-  abrir()
+  caminho
+  fps: lido do arquivo (30 se ausente)
   lerQuadro(): imagem BGR
   liberar()
 }
 
-class FaixaHSV {
-  inferior: 3 valores
-  superior: 3 valores
-}
-
 class DetectorDeBarra {
   rotulo: acelerador ou freio
-  linhas: intervalo
-  colunas: intervalo
+  faixaHSV
   contarPixels(quadroHSV): int
 }
 
 class LeitorDeVelocidade {
   idiomas = pt, en
-  linhas = 610:640
-  colunas = 1128:1212
-  confiancaMinima = argumento (padrão 0.5)
+  confiancaMinima = 0,5
+  velMax = 400 km/h
+  saltoMax = 15 km/h por quadro
   ler(quadroBGR): int ou nenhum
+  statusDoQuadro: aceito ou motivo
 }
 
 class IntegradorDeDistancia {
-  velocidadeKmh: int = 0
-  distanciaM: float = 0
-  passoSegundos = 1/fps (reserva 30)
+  velocidadeKmh = 0
+  distanciaM = 0
+  passo = 1/fps
   avancar(): float
 }
 
 class SerieTemporal {
-  distanciaTotal: ndarray
-  acelerador: ndarray
-  freio: ndarray
-  anexarQuadro()
-  normalizarPeloMaximo()
+  pixelsAcelerador, pixelsFreio
+  velocidade, distancia, statusOCR
+  percentual(metodo = p99 | max | fixa)
+}
+
+class DetectorVoltas {
+  passo = 5 quadros
+  numeros: contagem do nº da volta
+  amostra(quadro, tempo): evento
+  fechar(limite): estatísticas
+}
+
+class LeitorDeCronometro {
+  idiomas = en
+  lerTempo(recorte): segundos
+  lerNumero(recorte): int
+  refinarLimite(buffer)
+}
+
+class GravadorDeVoltas {
+  invalidaApos = 8 s
+  registrar(início, fim, tempoHUD)
+  gravarVolta(): volta_seqNN_hudMM.csv
+  gravarResumo(): voltas.csv
+}
+
+class CatalogoDePistas {
+  arquivo = pistas.json
+  toleranciaPct = 5
+  resolver(pista, comprimento): metros
+  distanciaNaPista(distância): [0, L], erro %
+  avisarDesvio(erro)
 }
 
 class GraficoDeTelemetria {
-  titulo = "Telemetria"
-  eixoX = "Distância (m)"
-  eixoY = "% aceleração/freio"
-  tracarAcelerador()
-  tracarFreio()
-  exibir() ou gravarPng()
+  eixoX = [0, comprimento] por volta
+  exibir() ou gravarPNG()
 }
 
+LeitorTelemetria --> Preset : carrega
+LeitorTelemetria --> CatalogoDePistas : resolve a pista
 LeitorTelemetria --> CapturaDeVideo : lê
-LeitorTelemetria --> DetectorDeBarra : aplica
+LeitorTelemetria --> DetectorDeBarra : aplica (2x)
 LeitorTelemetria --> LeitorDeVelocidade : consulta
 LeitorTelemetria --> IntegradorDeDistancia : atualiza
 LeitorTelemetria --> SerieTemporal : acumula
+LeitorTelemetria --> DetectorVoltas : alimenta a cada 5 quadros
+DetectorVoltas --> LeitorDeCronometro : usa
+LeitorTelemetria --> GravadorDeVoltas : fecha volta
+GravadorDeVoltas --> SerieTemporal : normaliza o trecho da volta
+GravadorDeVoltas --> CatalogoDePistas : ajusta a distância
+GravadorDeVoltas --> GraficoDeTelemetria : PNG da volta (opcional)
 LeitorTelemetria --> GraficoDeTelemetria : desenha
-DetectorDeBarra --> FaixaHSV : usa
-
-CapturaDeVideo -[hidden]right- DetectorDeBarra
-DetectorDeBarra -[hidden]right- LeitorDeVelocidade
-IntegradorDeDistancia -[hidden]right- SerieTemporal
-SerieTemporal -[hidden]right- GraficoDeTelemetria
-LeitorDeVelocidade -[hidden]down- IntegradorDeDistancia
-
-note bottom of DetectorDeBarra
-  Acelerador (verde): linhas 585:690,
-  colunas 1053:1095,
-  HSV [35, 40, 40] a [85, 255, 255].
-  Freio (rosa), nos dois presets:
-  HSV [140, 80, 80] a [179, 255, 255].
-  Preset original: mesmas colunas.
-  Preset lmu_default_1080p: freio à
-  esquerda do acelerador, no dial.
-  O arco de RPM pode contaminar o freio.
-end note
-
-note bottom of LeitorDeVelocidade
-  O recorte vai de BGR para RGB
-  antes do EasyOCR. Se vários textos
-  do quadro passam no filtro, o último
-  prevalece. Sem aceite, velocidadeKmh
-  não muda. isdigit() só aceita dígitos.
-end note
-
-note bottom of IntegradorDeDistancia
-  distanciaM += (velocidadeKmh / 3.6) × (1/fps).
-  fps vem de CAP_PROP_FPS; sem taxa
-  válida, vale 30. Sem leitura aceita,
-  velocidadeKmh não muda.
-end note
-
-note bottom of SerieTemporal
-  acelerador e freio começam como
-  contagem de pixels e, após o vídeo,
-  são reescritos no mesmo array:
-  (contagem / máximo da série) × 100.
-end note
 @enduml

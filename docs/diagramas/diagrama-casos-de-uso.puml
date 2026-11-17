@@ -1,43 +1,45 @@
 @startuml diagrama-casos-de-uso
-top to bottom direction
+!pragma layout smetana
+left to right direction
 skinparam shadowing false
 skinparam dpi 140
 skinparam backgroundColor white
 skinparam packageStyle rectangle
-skinparam nodesep 16
-skinparam ranksep 18
 
-title Diagrama de casos de uso — leitor de telemetria
+title Diagrama de casos de uso — leitor de telemetria (versão revisada)
 
 actor "Piloto" as piloto
-actor "Arquivo de vídeo\n(test_telemetria.mp4)" as video
+actor "Arquivo de vídeo\n(gravação da transmissão)" as video
 
 rectangle "Leitor de telemetria" {
   usecase "Processar o vídeo\nde telemetria" as UC1
-  together {
-    usecase "Segmentar o acelerador\n(máscara HSV verde)" as UC2
-    usecase "Segmentar o freio\n(máscara HSV rosa)" as UC3
-    usecase "Reconhecer a velocidade\n(dígitos, confiança configurável)" as UC4
-  }
-  together {
-    usecase "Integrar a distância\n(passo 1/fps do vídeo)" as UC5
-    usecase "Normalizar cada barra\npelo máximo da gravação" as UC6
-    usecase "Exibir o gráfico\npercentual por distância" as UC7
-  }
-  usecase "Gravar o gráfico em PNG" as UC8
-  usecase "Exportar a série em CSV" as UC9
+  usecase "Segmentar o acelerador\n(máscara HSV verde) — RF02" as UC2
+  usecase "Segmentar o freio\n(máscara HSV rosa, recorte\nsem a pista) — RF03" as UC3
+  usecase "Reconhecer a velocidade\n(dígitos, confiança > 0,5,\n0–400 km/h, salto ≤ 15 km/h\npor quadro) — RF04 a RF06" as UC4
+  usecase "Integrar a distância\n(passo 1/FPS) — RF07" as UC5
+  usecase "Normalizar cada barra\n(percentil 99 por padrão;\nmáximo ou área fixa) — RF08" as UC6
+  usecase "Exibir ou gravar\no gráfico — RF09" as UC7
+  usecase "Separar as voltas\npelo cronômetro do HUD — RF10" as UC8
+  usecase "Gravar cada volta válida\ne o resumo das voltas" as UC9
+  usecase "Invalidar a volta\n(cronômetro ausente ≥ 8 s,\npausa, volta de saída\nou incompleta)" as UC10
+  usecase "Avisar recorte\nsem a cor esperada — RNF07" as UC11
+  usecase "Informar a pista\n(--pista do catálogo ou\n--comprimento-pista) — RF11" as UC12
+  usecase "Ajustar a volta ao comprimento\n(eixo 0–comprimento; erro %;\naviso acima de 5%) — RF11" as UC13
 }
 
 piloto --> UC1
 video --> UC1
 
-' A seta parte do caso de uso base e chega no caso incluído.
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
 UC1 ..> UC4 : <<include>>
 UC1 ..> UC5 : <<include>>
 UC1 ..> UC6 : <<include>>
 UC1 ..> UC7 : <<include>>
-UC8 ..> UC7 : <<extend>>
-UC9 ..> UC1 : <<extend>>
+UC1 ..> UC12 : <<include>>
+UC9 ..> UC13 : <<include>>
+UC8 ..> UC1 : <<extend>>\n(padrão; --sem-voltas desliga)
+UC8 ..> UC9 : <<include>>
+UC10 ..> UC8 : <<extend>>
+UC11 ..> UC1 : <<extend>>\n(recorte sem nenhum pixel)
 @enduml

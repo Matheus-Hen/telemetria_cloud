@@ -26,6 +26,8 @@ A gravação do autor no GeForce NOW é 1280×720 a 30 fps, e os recortes dessa 
 
 `leitor.py` lê os argumentos, escolhe os recortes e percorre o vídeo.
 
+0. `--pista` escolhe o circuito no catálogo `pistas.json` (comprimento oficial em metros, com a fonte), ou `--comprimento-pista METROS` informa o comprimento diretamente. Um dos dois é obrigatório: sem eles, o script para antes de abrir o vídeo.
+
 1. `--config` escolhe o preset `original`, `lmu_gfn_720p` ou `lmu_default_1080p`, ou um arquivo JSON com os três recortes (e, opcionalmente, `area_acelerador` e `area_freio`). O padrão é `lmu_gfn_720p`. Se um recorte não tiver nenhum pixel da cor esperada em todo o vídeo, o script avisa no stderr que o preset provavelmente não corresponde à gravação.
 2. Cria um leitor EasyOCR para português e inglês (`easyocr.Reader(['pt', 'en'])`). Na primeira vez, a biblioteca baixa os modelos para `~/.EasyOCR/model`.
 3. Abre o vídeo de `--video` (padrão: `test_telemetria.mp4`) e lê `CAP_PROP_FPS`. Se a taxa não vier ou for inválida, usa 30. O passo é `dt = 1/fps`.
@@ -38,7 +40,7 @@ A gravação do autor no GeForce NOW é 1280×720 a 30 fps, e os recortes dessa 
    5. Percorre os resultados. Se a confiança é maior que `--confianca` (padrão 0,5), `text.isdigit()` é verdadeiro, o valor está entre 0 e `--vel-max` (padrão 400 km/h) e não difere da última leitura aceita em mais de `--salto-max` (padrão 15 km/h) por quadro decorrido desde ela, substitui a velocidade por `int(text)`. Depois de 15 rejeições seguidas por salto, a próxima leitura dentro da faixa é aceita, para o filtro não ficar preso a um valor errado. Cada quadro recebe um status no CSV (`aceito`, `sem_leitura`, `rejeitado_confianca`, `rejeitado_nao_numerico`, `rejeitado_faixa` ou `rejeitado_salto`), e a contagem de cada status é impressa no fim da execução. Se vários resultados do mesmo quadro passam no filtro, fica o último da lista. Se nenhum passa, a velocidade anterior permanece (0 até a primeira leitura aceita).
    6. Soma `(velocidade / 3.6) * dt` metros à distância. `velocidade / 3.6` converte km/h para m/s.
 6. Converte cada série de pixels em percentual com `--normalizacao`: `p99` (padrão) divide pelo percentil 99 da própria série e limita a 100; `max` divide pelo máximo (comportamento da primeira versão); `fixa` divide por `area_acelerador`/`area_freio` do preset. Se a referência é 0, o percentual fica em 0.
-7. Desenha as duas curvas contra a distância, com fundo escuro, preenchimento e grade. Sem `--headless`, abre a janela com `plt.show()`. Com `--headless`, grava o PNG e não abre janela.
+7. Desenha as duas curvas contra a distância, com fundo escuro, preenchimento e grade. Em cada volta (e no vídeo inteiro com `--sem-voltas`), o eixo da distância fica fixo em `[0, comprimento da pista]`, e a distância integrada é reescalada para terminar no comprimento; com a separação de voltas, o gráfico do vídeo inteiro segue a distância acumulada, com uma linha tracejada no início de cada volta. Sem `--headless`, abre a janela com `plt.show()`. Com `--headless`, grava o PNG e não abre janela.
 8. Se `--csv` foi informado, grava a série já em percentual.
 
 O percentual de cada barra é relativo ao percentil 99 daquela série, naquela gravação: pressupõe que a gravação tenha acionamentos plenos. Com `max`, um único quadro atípico (por exemplo, pixels da pista dentro do recorte) comprime todas as outras leituras; foi o que ocorreu com o recorte original do freio em `lmu_gfn_720p`, que alcançava a zebra vermelha e branca da pista acima do dial.
@@ -93,6 +95,7 @@ A numeração segue o capítulo de metodologia do TCC.
 - **RF08.** Ao término do vídeo, o sistema converte cada série de pixels em percentual de uma referência: por padrão, o percentil 99 da própria série; opcionalmente, o máximo da série ou uma área fixa da barra plena informada na configuração. O percentual é limitado a 100%. Referência 0 vira percentual 0.
 - **RF09.** O sistema exibe um gráfico com os percentuais de acelerador (verde) e de freio (vermelho) em função da distância, em metros. Com `--headless`, o mesmo gráfico é gravado em PNG.
 - **RF10.** O sistema separa as voltas pelo cronômetro da volta atual exibido no HUD, gravando cada volta válida em um arquivo próprio, com a distância reiniciada em zero, e um resumo de todas as voltas. Não grava a volta em que o cronômetro desaparece por tempo prolongado, a volta em que o jogo é pausado, a volta de saída nem a volta final incompleta.
+- **RF11.** O sistema exige o comprimento da pista, pela chave do catálogo de pistas do Le Mans Ultimate (`--pista`) ou em metros (`--comprimento-pista`). Em cada volta, o gráfico usa o eixo de distância fixo de zero ao comprimento da pista, com a distância integrada reescalada para esse intervalo; a distância integrada e o erro percentual em relação ao comprimento são registrados no CSV da volta, no resumo e no log, com aviso quando o erro excede a tolerância (`--tolerancia-pista`, padrão 5%).
 
 ### Requisitos não funcionais
 
@@ -190,19 +193,19 @@ O OCR só aceita texto formado só por dígitos. Um rótulo com unidade (`163 KP
 Captura do autor no GeForce NOW (1280×720, 30 fps), gráfico em PNG e série em CSV, sem janela:
 
 ```bash
-python leitor.py --video video.mp4 --config lmu_gfn_720p --headless --png telemetria.png --csv telemetria.csv
+python leitor.py --video video.mp4 --pista fuji --config lmu_gfn_720p --headless --png telemetria.png --csv telemetria.csv
 ```
 
 O mesmo recorte lido do JSON:
 
 ```bash
-python leitor.py --video video.mp4 --config configs/config_gfn_720p.json --headless --png telemetria.png --csv telemetria.csv
+python leitor.py --video video.mp4 --pista fuji --config configs/config_gfn_720p.json --headless --png telemetria.png --csv telemetria.csv
 ```
 
-Sem argumentos, o script procura `test_telemetria.mp4` e usa o preset `lmu_gfn_720p`. Para a primeira versão das coordenadas:
+Só com `--pista`, o script procura `test_telemetria.mp4` e usa o preset `lmu_gfn_720p`. Para a primeira versão das coordenadas:
 
 ```bash
-python leitor.py --video test_telemetria.mp4 --config original --normalizacao max
+python leitor.py --video test_telemetria.mp4 --pista fuji --config original --normalizacao max
 ```
 
 HUD padrão, gráfico em PNG e série em CSV, sem janela:
@@ -210,6 +213,7 @@ HUD padrão, gráfico em PNG e série em CSV, sem janela:
 ```bash
 python leitor.py \
   --video gravacao.mp4 \
+  --pista spa \
   --config lmu_default_1080p \
   --headless \
   --png telemetria.png \
@@ -219,14 +223,51 @@ python leitor.py \
 Confiança mínima diferente da padrão:
 
 ```bash
-python leitor.py --video gravacao.mp4 --config lmu_default_1080p --confianca 0.4 --headless
+python leitor.py --video gravacao.mp4 --pista monza --config lmu_default_1080p --confianca 0.4 --headless
 ```
 
 Recortes num arquivo:
 
 ```bash
-python leitor.py --video gravacao.mp4 --config meus_rois.json --headless --csv telemetria.csv
+python leitor.py --video gravacao.mp4 --pista fuji --config meus_rois.json --headless --csv telemetria.csv
 ```
+
+Pista ou traçado fora do catálogo (por exemplo, o Fuji Classic, sem a chicane), com o comprimento em metros:
+
+```bash
+python leitor.py --video gravacao.mp4 --comprimento-pista 4526 --headless
+```
+
+O valor 4526 é só ilustrativo; confira o comprimento do traçado antes de usar. Para ver o catálogo: `python leitor.py --listar-pistas`.
+
+### Comprimento da pista
+
+`pistas.json` traz o comprimento oficial de cada circuito do Le Mans Ultimate, da ficha "Circuit Details" da página do circuito em `lemansultimate.com/circuit/...` (consultada em 17/11/2026). Só entram os traçados principais que a página oficial informa; traçados alternativos (Fuji Classic, Bahrain Outer/Paddock/Endurance, Sebring School, COTA National, Le Mans Mulsanne, Silverstone International/National, variantes de Paul Ricard) ficam de fora e devem usar `--comprimento-pista`.
+
+| `--pista` | Circuito | Comprimento (m) |
+| --- | --- | --- |
+| `fuji` | Fuji Speedway | 4563 |
+| `bahrain` | Bahrain International Circuit | 5412 |
+| `barcelona` | Circuit de Barcelona-Catalunya | 4657 |
+| `le-mans` | Circuit de la Sarthe (Le Mans) | 13626 |
+| `paul-ricard` | Circuit Paul Ricard | 5770 |
+| `cota` | Circuit of the Americas | 5514 |
+| `daytona` | Daytona International Speedway | 5740 |
+| `imola` | Autodromo Enzo e Dino Ferrari (Imola) | 4909 |
+| `interlagos` | Autódromo José Carlos Pace (Interlagos) | 4314 |
+| `lusail` | Lusail International Circuit | 5419 |
+| `road-atlanta` | Michelin Raceway Road Atlanta | 4088 |
+| `monza` | Autodromo Nazionale Monza | 5793 |
+| `portimao` | Algarve International Circuit (Portimão) | 4653 |
+| `sebring` | Sebring International Raceway | 6019 |
+| `silverstone` | Silverstone | 5891 |
+| `spa` | Circuit de Spa-Francorchamps | 7004 |
+| `long-beach` | Streets of Long Beach | 3167 |
+| `laguna-seca` | WeatherTech Raceway Laguna Seca | 3602 |
+
+Observações do catálogo: a página de Interlagos traz 4,314 km na ficha e 4,309 km no texto; a de Lusail, 5,419 km na ficha e 5,38 km no texto; a de Daytona, "5.74km" (duas casas); a de Paul Ricard não diz a qual traçado se refere o comprimento. Vale o número da ficha.
+
+Por que o comprimento é obrigatório: a distância vem da integração da velocidade lida no HUD, que nunca fecha exatamente no comprimento da pista (no vídeo do TCC, entre −0,27% e +0,38% por volta). Para que o gráfico de cada volta fique dentro da pista, o eixo é fixado em `[0, comprimento]` e a distância de cada quadro é multiplicada por `comprimento / distância integrada da volta`, o que preserva a forma do traço. O valor integrado e o erro continuam registrados (`distancia_m` e `erro_distancia_pct`), e um erro acima de `--tolerancia-pista` (padrão 5%) gera aviso no stderr, sinal de pista errada, taxa de quadros errada ou OCR com problema.
 
 A primeira chamada cria o leitor OCR e pode demorar enquanto os modelos são baixados. Cada quadro passa por `readtext`. Ao terminar, o script imprime a taxa lida, o passo `dt`, a quantidade de quadros e o config usado.
 
@@ -238,9 +279,10 @@ Sem `--headless`, uma janela do Matplotlib. Com `--headless`, um PNG no caminho 
 - curva verde do acelerador e curva vermelha do freio (a máscara do freio é rosa; a linha do gráfico é vermelha);
 - área sob cada curva com transparência 0,3;
 - grade com transparência 0,2;
-- título `Telemetria`, eixo horizontal `Distância (m)`, eixo vertical `% aceleração/freio`.
+- título `Telemetria — <pista>`, eixo horizontal `Distância (m)`, eixo vertical `% aceleração/freio`;
+- com `--sem-voltas`, eixo horizontal fixo em `[0, comprimento da pista]` (distância reescalada); com a separação de voltas, distância acumulada do vídeo e uma linha tracejada no início de cada volta.
 
-O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acelerador_pct,freio_pct,px_acelerador,px_freio,ocr_status`. Tempo e distância usam o `dt` do arquivo. A velocidade é a última leitura aceita naquele quadro. Os percentuais seguem `--normalizacao`; as contagens brutas de pixels permitem renormalizar fora do script.
+O CSV, quando pedido, tem o cabeçalho `tempo_s,distancia_m,velocidade_kmh,acelerador_pct,freio_pct,px_acelerador,px_freio,ocr_status`, com a distância integrada (sem reescala). Tempo e distância usam o `dt` do arquivo. A velocidade é a última leitura aceita naquele quadro. Os percentuais seguem `--normalizacao`; as contagens brutas de pixels permitem renormalizar fora do script.
 
 ## Limitações
 
@@ -266,15 +308,15 @@ Com o preset `lmu_gfn_720p` (ou um JSON com a chave `cronometro`), o script tamb
 - **Leitura.** O cronômetro passa pelo EasyOCR a cada `--passo-cronometro` quadros (padrão 5). Cada leitura `v` no quadro `q` implica um início de volta em `q/fps − v`; dentro de uma volta esse valor é constante, o que permite descartar erros de leitura.
 - **Fim da volta.** Ao cruzar a linha, o Le Mans Ultimate congela o tempo oficial da volta no "Atual" por cerca de 10 s. Três leituras iguais entre as cinco últimas confirmam o fim; o script então lê quadro a quadro o trecho anterior e marca como limite o primeiro quadro em que o cronômetro atingiu o tempo oficial. A volta é fechada e gravada, e a distância e as séries recomeçam do zero. O arquivo é `saida/volta_seqNN_hudMM.csv`: NN é a ordem da volta na sessão (válida ou não) e MM é o número lido no HUD. Se o OCR do número falha, o nome fica `volta_seqNN_hudsem.csv`. Se esse caminho já existe, o script acrescenta `_2`, `_3` e assim por diante. O PNG de `--png-voltas` usa o mesmo radical. Se o tempo cai sem congelar (volta invalidada), o limite vem do início implícito das leituras novas.
 - **Voltas inválidas (não são gravadas).** O cronômetro some por `--invalida-apos` segundos seguidos ou mais (padrão 8; no vídeo do TCC o HUD mostra "-" por até ~5 s em voltas válidas, ao exibir o delta de setor), ou o tempo para enquanto o vídeo continua (pausa do jogo: o menu esconde o HUD e o cronômetro volta atrasado). A volta de saída (antes do primeiro reinício) e a volta final incompleta também não são gravadas.
-- **Resumo.** `saida/voltas.csv` traz `seq, volta, quadro_inicio, quadro_fim, tempo_hud_s, tempo_video_s, valida, motivo, distancia_m, maior_ausencia_cronometro_s, arquivo`. A coluna `volta` é o número do HUD e fica vazia quando o OCR não o leu. `arquivo` só é preenchido nas voltas válidas.
-- **Percentuais por volta.** Em `volta_seqNN_hudMM.csv`, acelerador e freio são normalizados com a série da própria volta (`--normalizacao`), e a coluna `quadro` é o índice do quadro no vídeo inteiro.
+- **Resumo.** `saida/voltas.csv` traz `seq, volta, quadro_inicio, quadro_fim, tempo_hud_s, tempo_video_s, valida, motivo, distancia_m, comprimento_pista_m, erro_distancia_pct, maior_ausencia_cronometro_s, arquivo`. `distancia_m` é a distância integrada, e `erro_distancia_pct`, o erro em relação ao comprimento da pista. A coluna `volta` é o número do HUD e fica vazia quando o OCR não o leu. `arquivo` só é preenchido nas voltas válidas.
+- **Percentuais por volta.** Em `volta_seqNN_hudMM.csv`, acelerador e freio são normalizados com a série da própria volta (`--normalizacao`), e a coluna `quadro` é o índice do quadro no vídeo inteiro. `distancia_m` é a distância integrada desde a linha, e `distancia_pista_m`, a mesma distância reescalada para terminar no comprimento da pista (é o eixo de `volta_seqNN_hudMM.png`).
 
 ```bash
-python leitor.py --video sessao.mp4 --headless --saida-voltas saida --png-voltas
-python leitor.py --video volta.mp4 --sem-voltas --headless --csv volta.csv   # comportamento anterior
+python leitor.py --video sessao.mp4 --pista fuji --headless --saida-voltas saida --png-voltas
+python leitor.py --video volta.mp4 --pista fuji --sem-voltas --headless --csv volta.csv   # vídeo de uma volta só
 ```
 
-Teste de regressão do detector (sem OCR, reproduz as leituras gravadas do vídeo do TCC): `python avaliacao/teste_detector_voltas.py`.
+Teste de regressão do detector (sem OCR, reproduz as leituras gravadas do vídeo do TCC): `python avaliacao/teste_detector_voltas.py`. Teste do catálogo de pistas e da reescala da distância: `python avaliacao/teste_pistas.py`.
 
 O vídeo inteiro continua gerando o gráfico e o `--csv` de antes. Sem `--headless`, use `--png-voltas` com cuidado: o gráfico por volta força o backend sem janela.
 

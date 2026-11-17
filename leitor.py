@@ -27,6 +27,14 @@ Separação de voltas (nov. 2026):
   marcada como inválida e não é gravada; a volta de saída (antes do primeiro
   reinício) e a volta final incompleta também não são gravadas;
 - voltas.csv resume todas as voltas detectadas.
+
+Comprimento da pista (nov. 2026):
+- a execução exige --pista (chave de pistas.json, com o comprimento oficial
+  de cada circuito do Le Mans Ultimate) ou --comprimento-pista METROS;
+- em cada volta, o gráfico usa o eixo de distância fixo em [0, comprimento],
+  com a distância integrada reescalada para terminar no comprimento da pista;
+  a distância integrada e o erro em relação ao comprimento ficam no CSV, em
+  voltas.csv e no log, com aviso quando o erro passa de --tolerancia-pista %.
 """
 
 import argparse
@@ -106,6 +114,9 @@ REJEICOES_PARA_REINICIAR = 15
 # válidas (o HUD mostra "-" enquanto exibe o delta de setor); 8 s deixa folga.
 PASSO_CRONOMETRO_PADRAO = 5
 INVALIDA_APOS_PADRAO = 8.0
+# Catálogo de pistas (comprimento oficial em metros) e tolerância do aviso de distância.
+CATALOGO_PISTAS = Path(__file__).resolve().parent / "pistas.json"
+TOLERANCIA_PISTA_PADRAO = 5.0
 TOLERANCIA_INICIO_S = 0.2   # concordância entre leituras do mesmo cronômetro
 DESVIO_PAUSA_S = 0.5        # atraso do cronômetro em relação ao vídeo = pausa
 REINICIO_MINIMO_S = 20.0    # um reinício real atrasa o cronômetro em quase uma volta inteira
@@ -360,6 +371,53 @@ def refinar_limite(reader, buffer, tempo_hud, quadro_aprox, passo):
     return quadro_aprox
 
 
+def carregar_pistas(caminho=CATALOGO_PISTAS):
+    """Lê o catálogo de pistas: chave -> nome, traçado, comprimento_m e fonte."""
+    dados = json.loads(Path(caminho).read_text(encoding="utf-8"))
+    return dados["pistas"]
+
+
+def resolver_pista(chave, comprimento_manual, caminho=CATALOGO_PISTAS):
+    """Devolve (descrição, comprimento em metros) a partir de --pista e/ou --comprimento-pista.
+
+    --comprimento-pista tem precedência sobre o valor do catálogo. Sem nenhum
+    dos dois, a execução é interrompida: o eixo do gráfico depende da pista.
+    """
+    if comprimento_manual is not None:
+        if comprimento_manual <= 0:
+            raise SystemExit("--comprimento-pista precisa ser maior que zero (em metros).")
+        nome = chave if chave else "pista informada"
+        return f"{nome} ({comprimento_manual:.0f} m, informado)", float(comprimento_manual)
+    if not chave:
+        raise SystemExit(
+            "Informe a pista: --pista CHAVE (veja --listar-pistas) ou "
+            "--comprimento-pista METROS para uma pista fora do catálogo."
+        )
+    pistas = carregar_pistas(caminho)
+    if chave not in pistas:
+        raise SystemExit(
+            f"Pista desconhecida: {chave}. Pistas do catálogo: {', '.join(pistas)}. "
+            "Para outra pista ou traçado, use --comprimento-pista METROS."
+        )
+    pista = pistas[chave]
+    return f"{pista['nome']} ({pista['comprimento_m']} m)", float(pista["comprimento_m"])
+
+
+def distancia_na_pista(distancia, comprimento):
+    """Reescala a distância integrada de uma volta para terminar no comprimento da pista.
+
+    Devolve (distância na pista, erro % da distância integrada em relação ao
+    comprimento). A forma do traço se mantém; o fator é o mesmo em toda a volta
+    e o resultado fica limitado a [0, comprimento].
+    """
+    distancia = np.asarray(distancia, dtype=float)
+    total = float(distancia[-1]) if distancia.size else 0.0
+    if total <= 0:
+        return np.zeros_like(distancia), float("nan")
+    erro = (total - comprimento) / comprimento * 100
+    return np.clip(distancia * (comprimento / total), 0.0, comprimento), erro
+
+
 def criar_leitor_ocr(idiomas, verbose=True):
     """Importa o EasyOCR só aqui, para o teste do detector rodar sem PyTorch."""
     import easyocr
@@ -383,22 +441,27 @@ def nome_arquivo_volta(pasta, seq, numero_hud):
 
 
 def gravar_volta(caminho, quadros, dt, velocidades, px_acel, px_freio, status_ocr,
-                 normalizacao, rois):
-    """Grava uma volta com distância recomeçando do zero e percentuais da própria volta."""
+                 normalizacao, rois, comprimento):
+    """Grava uma volta com distância recomeçando do zero e percentuais da própria volta.
+
+    distancia_m é a distância integrada; distancia_pista_m é a mesma distância
+    reescalada para terminar no comprimento da pista (eixo do gráfico).
+    """
     distancia = np.cumsum(np.asarray(velocidades, dtype=float) / 3.6 * dt)
+    na_pista, _erro = distancia_na_pista(distancia, comprimento)
     acel = percentual(px_acel, normalizacao, rois.get("area_acelerador"))
     freio = percentual(px_freio, normalizacao, rois.get("area_freio"))
     with open(caminho, "w", newline="", encoding="utf-8") as arquivo:
         escritor = csv.writer(arquivo)
         escritor.writerow(
             ["quadro", "tempo_s", "distancia_m", "velocidade_kmh", "acelerador_pct",
-             "freio_pct", "px_acelerador", "px_freio", "ocr_status"]
+             "freio_pct", "px_acelerador", "px_freio", "ocr_status", "distancia_pista_m"]
         )
         for i, quadro in enumerate(quadros):
             escritor.writerow([quadro, round((i + 1) * dt, 4), round(float(distancia[i]), 3),
                                velocidades[i], round(float(acel[i]), 3), round(float(freio[i]), 3),
-                               px_acel[i], px_freio[i], status_ocr[i]])
-    return distancia, acel, freio
+                               px_acel[i], px_freio[i], status_ocr[i], round(float(na_pista[i]), 3)])
+    return na_pista, acel, freio
 
 
 def gravar_csv(caminho, tempo, distancia, velocidade, acelerador, freio,
@@ -414,7 +477,14 @@ def gravar_csv(caminho, tempo, distancia, velocidade, acelerador, freio,
             escritor.writerow(linha)
 
 
-def desenhar(distancia, acelerador, freio, headless, png):
+def desenhar(distancia, acelerador, freio, headless, png, comprimento=None, titulo="Telemetria",
+             marcas_volta=None):
+    """Traça acelerador e freio contra a distância.
+
+    Com comprimento e sem marcas_volta, o eixo x fica fixo em [0, comprimento]
+    (uma volta). Com marcas_volta (vídeo inteiro, várias voltas), o eixo segue a
+    distância acumulada e uma linha tracejada marca a distância de cada início de volta.
+    """
     import matplotlib
     if headless:
         matplotlib.use("Agg", force=True)
@@ -427,7 +497,12 @@ def desenhar(distancia, acelerador, freio, headless, png):
     ax.fill_between(distancia, acelerador, alpha=0.3, color="green")
     ax.fill_between(distancia, freio, alpha=0.3, color="red")
     ax.grid(alpha=0.2)
-    ax.set(title="Telemetria", xlabel="Distância (m)", ylabel="% aceleração/freio")
+    ax.set(title=titulo, xlabel="Distância (m)", ylabel="% aceleração/freio")
+    if marcas_volta is not None:
+        for x in marcas_volta:
+            ax.axvline(x, color="white", alpha=0.6, linestyle="--", linewidth=1.0)
+    elif comprimento:
+        ax.set_xlim(0, comprimento)
     if headless:
         fig.savefig(png, dpi=120, bbox_inches="tight")
         plt.close(fig)
@@ -438,6 +513,31 @@ def desenhar(distancia, acelerador, freio, headless, png):
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Extrai acelerador, freio e velocidade do HUD de um vídeo."
+    )
+    parser.add_argument(
+        "--pista",
+        default=None,
+        help=(
+            "Pista do vídeo, pela chave do catálogo pistas.json (ex.: fuji). Obrigatória, "
+            "a menos que --comprimento-pista seja informado. Veja --listar-pistas."
+        ),
+    )
+    parser.add_argument(
+        "--comprimento-pista",
+        type=float,
+        default=None,
+        help="Comprimento da pista em metros; substitui o do catálogo (pista ou traçado fora dele).",
+    )
+    parser.add_argument(
+        "--tolerancia-pista",
+        type=float,
+        default=TOLERANCIA_PISTA_PADRAO,
+        help="Avisa quando a distância de uma volta difere do comprimento em mais que N%% (padrão: 5).",
+    )
+    parser.add_argument(
+        "--listar-pistas",
+        action="store_true",
+        help="Lista as pistas do catálogo, com comprimento e fonte, e sai.",
     )
     parser.add_argument(
         "--video",
@@ -521,8 +621,32 @@ def parse_args():
     return parser.parse_args()
 
 
+def avisar_distancia(rotulo, distancia, comprimento, tolerancia):
+    """Avisa quando a distância de uma volta foge do comprimento da pista além da tolerância."""
+    erro = (distancia - comprimento) / comprimento * 100
+    if abs(erro) > tolerancia:
+        print(
+            f"AVISO: {rotulo} somou {distancia:.1f} m, {erro:+.1f}% em relação ao comprimento "
+            f"da pista ({comprimento:.0f} m), acima da tolerância de {tolerancia:g}%. Confira "
+            "--pista/--comprimento-pista, a taxa de quadros do vídeo e a leitura da velocidade.",
+            file=sys.stderr,
+            flush=True,
+        )
+    return erro
+
+
+def listar_pistas():
+    for chave, pista in carregar_pistas().items():
+        print(f"{chave:12s} {pista['comprimento_m']:6d} m  {pista['nome']} ({pista['tracado']})  {pista['fonte']}")
+
+
 def main():
     args = parse_args()
+    if args.listar_pistas:
+        listar_pistas()
+        return
+    descricao_pista, comprimento = resolver_pista(args.pista, args.comprimento_pista)
+    print(f"pista: {descricao_pista}", flush=True)
     rois = carregar_rois(args.config)
     ya1, ya2, xa1, xa2 = rois["acelerador"]
     yf1, yf2, xf1, xf2 = rois["freio"]
@@ -585,6 +709,8 @@ def main():
             "valida": "nao" if motivos else "sim",
             "motivo": "; ".join(motivos),
             "distancia_m": f"{distancia_volta:.2f}",
+            "comprimento_pista_m": f"{comprimento:.0f}",
+            "erro_distancia_pct": f"{(distancia_volta - comprimento) / comprimento * 100:+.3f}",
             "maior_ausencia_cronometro_s": (estatisticas or {}).get("maior_ausencia_s", ""),
             "arquivo": "",
         }
@@ -593,15 +719,19 @@ def main():
             dist, acel, frei = gravar_volta(
                 nome, list(indices), dt, vel, [pixels_acel[i] for i in indices],
                 [pixels_freio[i] for i in indices], [status_ocr[i] for i in indices],
-                args.normalizacao, rois,
+                args.normalizacao, rois, comprimento,
             )
             registro["arquivo"] = str(nome)
             if args.png_voltas:
-                desenhar(dist, acel, frei, True, str(nome.with_suffix(".png")))
+                desenhar(dist, acel, frei, True, str(nome.with_suffix(".png")), comprimento,
+                         f"Telemetria — volta {registro['volta'] or seq} — {descricao_pista}")
         voltas.append(registro)
         estado = "válida" if not motivos else f"inválida ({registro['motivo']})"
         print(f"volta seq {seq} (HUD {registro['volta'] or '-'}): quadros {inicio}-{fim}, tempo HUD {registro['tempo_hud_s'] or '-'} s, "
+              f"distância {distancia_volta:.1f} m ({registro['erro_distancia_pct']}% do comprimento), "
               f"{estado}{', gravada em ' + registro['arquivo'] if registro['arquivo'] else ''}", flush=True)
+        if not motivos:
+            avisar_distancia(f"a volta seq {seq}", distancia_volta, comprimento, args.tolerancia_pista)
 
     while True:
         ret, frame = cap.read()
@@ -711,7 +841,19 @@ def main():
     if args.csv:
         gravar_csv(args.csv, tempos, distancias, velocidades, acelerador, freio,
                    pixels_acel, pixels_freio, status_ocr)
-    desenhar(distancias, acelerador, freio, args.headless, args.png)
+    if cronometro is None:
+        # Sem separação de voltas, o vídeo é tratado como uma volta: eixo fixo na pista.
+        erro = (distancias[-1] - comprimento) / comprimento * 100
+        print(f"distância: {distancias[-1]:.1f} m ({erro:+.3f}% do comprimento da pista)", flush=True)
+        avisar_distancia("o vídeo", distancias[-1], comprimento, args.tolerancia_pista)
+        na_pista, _ = distancia_na_pista(distancias, comprimento)
+        desenhar(na_pista, acelerador, freio, args.headless, args.png, comprimento,
+                 f"Telemetria — {descricao_pista}")
+    else:
+        # Vídeo inteiro com várias voltas: distância acumulada, com uma marca no início de cada volta.
+        marcas = [distancias[v["quadro_inicio"] - 1] for v in voltas if v["quadro_inicio"] > 0]
+        desenhar(distancias, acelerador, freio, args.headless, args.png, comprimento,
+                 f"Telemetria — vídeo inteiro — {descricao_pista}", marcas_volta=marcas)
 
 
 if __name__ == "__main__":
