@@ -1,51 +1,54 @@
 @startuml diagrama-atividades
 skinparam shadowing false
-skinparam dpi 140
+skinparam dpi 120
 skinparam backgroundColor white
 
-title Diagrama de atividades — leitor.py
+title Diagrama de atividades — leitor.py (versão revisada)
 
 start
-:Escolher o preset ou o JSON\ne o limiar de confiança;
-:Criar o leitor EasyOCR\ncom os idiomas pt e en;
-:Abrir o vídeo e ler CAP_PROP_FPS\n(se inválido, usar 30);
-:dt = 1/fps;\nzerar velocidade e distância;
+if (--pista ou --comprimento-pista\ninformado?) then (sim)
+  :Obter o comprimento da pista\n(catálogo pistas.json ou valor informado);
+else (não)
+  :Interromper com mensagem de erro;
+  stop
+endif
+:Carregar o preset (padrão lmu_gfn_720p)\ne criar o leitor EasyOCR (pt, en);
+:Abrir o vídeo e ler o FPS (passo = 1/FPS);
+if (separação de voltas ativa?\n(padrão; --sem-voltas desliga)) then (sim)
+  :Criar o leitor do cronômetro (en)\ne o detector de voltas;
+endif
 
 while (cap.read() devolveu um quadro?) is (sim)
-  :Converter o quadro de BGR para HSV;
-  :Mascarar o verde no recorte do acelerador\nHSV [35, 40, 40] a [85, 255, 255];
-  :Anexar a contagem de pixels do acelerador;
-  :Mascarar o rosa no recorte do freio\nHSV [140, 80, 80] a [179, 255, 255];
-  :Anexar a contagem de pixels do freio;
-  :Recortar a velocidade do preset\ne converter de BGR para RGB;
-  :Reconhecer o texto com EasyOCR;
-  if (há resultado com confiança acima do limiar\ne texto só de dígitos?) then (sim)
-    :velocidade = inteiro do último\nresultado aceito nesse quadro;
+  :Converter o quadro para HSV;
+  :Contar pixels verdes no recorte do acelerador\ne pixels rosa no recorte do freio;
+  :Reconhecer a velocidade com EasyOCR;
+  if (dígitos, confiança > 0,5, 0–400 km/h\ne salto ≤ 15 km/h por quadro?) then (sim)
+    :Atualizar a velocidade;\nstatus = aceito;
   else (não)
-    :A velocidade armazenada permanece\n(0 até a primeira leitura aceita);
+    :Manter a velocidade anterior;\nregistrar o motivo da rejeição;
   endif
-  :distância = distância + (velocidade / 3,6) × dt;
-  :Anexar a distância à série;
+  :distância += (velocidade / 3,6) × passo;
+  if (separação ativa e quadro múltiplo de 5?) then (sim)
+    :Ler o cronômetro "Atual" do HUD;
+    if (o tempo congelou (3 leituras iguais\nentre as 5 últimas) ou caiu?) then (sim)
+      :Refinar o limite quadro a quadro\ne fechar a volta;
+      if (cronômetro ausente ≥ 8 s, pausa,\nvolta de saída ou incompleta?) then (sim)
+        :Registrar a volta como inválida\n(não grava o arquivo);
+      else (não)
+        :Gravar volta_seqNN_hudMM.csv\n(distância do zero; p99 da própria volta;\ndistância reescalada para [0, comprimento]);
+        :Registrar o erro % da distância;\navisar se passar de 5%;
+      endif
+    endif
+  endif
 endwhile (não)
-:Liberar o arquivo de vídeo;
 
-:acelerador e freio =\n(contagem / máximo) × 100;
-note right
-  Máximo igual a 0 vira percentual 0.
-  O percentual é o pico da gravação,
-  não a altura cheia do pedal.
-  O arco vermelho de RPM pode
-  contaminar a máscara do freio.
-end note
-:Traçar acelerador (verde) e freio (vermelho)\ncontra a distância, com fundo escuro;
-if (execução headless?) then (sim)
-  :Gravar o gráfico em PNG;
-else (não)
-  :Exibir o gráfico e aguardar\no fechamento da janela;
+if (separação ativa?) then (sim)
+  :Fechar a última volta (incompleta)\ne gravar voltas.csv;
 endif
-if (CSV pedido?) then (sim)
-  :Gravar tempo, distância, velocidade\ne percentuais;
-else (não)
+if (algum recorte sem nenhum pixel\nda cor esperada?) then (sim)
+  :Emitir aviso (RNF07);
 endif
+:Converter as séries em percentual\n(p99 por padrão; máximo ou área fixa),\nlimitado a 100%;
+:Gravar o CSV (opcional) e exibir\nou gravar o gráfico;
 stop
 @enduml

@@ -1,0 +1,816 @@
+{
+ "\"cloud gaming\" telemetry": {
+  "lang": "en",
+  "count": 222,
+  "top": [
+   [
+    "Characterizing the Network Traffic of Virtual Reality Cloud Gaming Applications",
+    2026,
+    "https://doi.org/10.23919/wons68803.2026.11501840"
+   ],
+   [
+    "Real-time latency prediction for cloud gaming applications",
+    2025,
+    "https://doi.org/10.1016/j.comnet.2025.111235"
+   ],
+   [
+    "DCTPQ: Dynamic Cloud Gaming Traffic Prioritization Using Machine Learning and Multi-Queueing for QoE Enhancement",
+    2025,
+    "https://doi.org/10.5753/sbrc.2025.6266"
+   ],
+   [
+    "Games Are Not Equal: Classifying Cloud Gaming Contexts for Effective User Experience Measurement",
+    2025,
+    "https://doi.org/10.1145/3730567.3764455"
+   ],
+   [
+    "Enhancing Performance in Programmable 5G Networks, Blockchains, and Cloud Gaming",
+    2024,
+    null
+   ],
+   [
+    "Player-Aware Resource Management in Cloud Gaming: A Reinforcement Learning Approach to Action Prediction and Network Slice Optimization",
+    2025,
+    null
+   ],
+   [
+    "Media over QUIC:in käyttäminen pilvipeluujärjestelmässä",
+    2026,
+    null
+   ],
+   [
+    "ARC: Consistent, Low-Latency Delivery via Receiver-Side Scheduling",
+    2025,
+    "https://doi.org/10.48550/arxiv.2511.16902"
+   ],
+   [
+    "Artificial Intelligence in Video Games and eSports",
+    2022,
+    "https://doi.org/10.1007/978-3-031-05740-3_22"
+   ],
+   [
+    "Movement- and Traffic-based User Identification in Commercial Virtual Reality Applications: Threats and Opportunities",
+    2025,
+    "https://doi.org/10.1109/vr59515.2025.00032"
+   ],
+   [
+    "SCONE-AEGIS: Uncertainty-Aware AI-Driven Edge Compute Steering for Mobile Edge Applications",
+    2026,
+    "https://doi.org/10.14445/22312803/ijctt-v74i4p105"
+   ],
+   [
+    "Context Monitoring for Improved System Performance and QoE",
+    2018,
+    "https://doi.org/10.1007/978-3-319-90415-3_2"
+   ],
+   [
+    "AweRAN: Making a Case for Application-aware Radio Access Network Slicing",
+    2023,
+    "https://doi.org/10.1145/3615453.3616511"
+   ],
+   [
+    "Proactive SFC Provisioning with Forecast-Driven DRL in Data Centers",
+    2026,
+    "https://doi.org/10.1109/icc59461.2026.11587313"
+   ],
+   [
+    "Realistic Traffic Generation Orchestrator for 5G Networks",
+    2026,
+    "https://doi.org/10.14209/sbrt.2026.1571299123"
+   ],
+   [
+    "Unlocking the power of 4G/5G mobile networks: An empirical dive into quality and energy efficiency in YouTube Edge services",
+    2025,
+    "https://doi.org/10.1016/j.comnet.2025.111344"
+   ],
+   [
+    "Progressive Traffic-Oriented Resource Management for Reducing Network Congestion in Edge Computing",
+    2021,
+    "https://doi.org/10.3390/e23050532"
+   ],
+   [
+    "Neural video codecs traffic research and modelling. Part I: Traffic models review",
+    2026,
+    "https://doi.org/10.36724/2409-5419-2026-18-2-14-36"
+   ],
+   [
+    "Anomaly Detection and Root Cause Diagnosis for Low-Latency Applications in Time-Varying Capacity Networks",
+    2025,
+    "https://doi.org/10.70675/6799e73bz7575z43fbz97f4z865ce6f35c4c"
+   ],
+   [
+    "Responsive high throughput congestion control for interactive applications over SDN-enabled networks",
+    2018,
+    "https://doi.org/10.1016/j.comnet.2018.01.043"
+   ],
+   [
+    "Evolving Mobile Cloud Gaming with 5G Standalone Network Telemetry",
+    2024,
+    "https://doi.org/10.48550/arxiv.2402.04454"
+   ],
+   [
+    "A Comparative Analysis on Using Low Earth Orbit and Geosynchronous Orbit Satellite Communication Systems to Support Telemedical Networks in Austere Environments",
+    2025,
+    "https://doi.org/10.24251/hicss.2025.410"
+   ],
+   [
+    "Architecting Low-Latency Portals with Edge-Optimized Infrastructure to Empower Game Developers",
+    2025,
+    "https://doi.org/10.56975/ijcrt.v13i7.290518"
+   ],
+   [
+    "VR-GX: an Attention-aware QoE-based resource allocation model for VR-Cloud Gaming",
+    2025,
+    "https://doi.org/10.5753/sbrc.2025.6328"
+   ],
+   [
+    "Toward Scalable VR-Cloud Gaming: An Attention-aware Adaptive Resource Allocation Framework for 6G Networks",
+    2025,
+    "https://doi.org/10.48550/arxiv.2512.11667"
+   ]
+  ]
+ },
+ "\"sim racing\" telemetry": {
+  "lang": "en",
+  "count": 52,
+  "top": [
+   [
+    "AI-enabled prediction of sim racing performance using telemetry data",
+    2024,
+    "https://doi.org/10.1016/j.chbr.2024.100414"
+   ],
+   [
+    "An AI Approach for Analyzing Driving Behaviour in Simulated Racing Using Telemetry Data",
+    2023,
+    "https://doi.org/10.1007/978-3-031-49065-1_19"
+   ],
+   [
+    "TRACK: Telemetry-Based Racing Analysis and Coaching Kit in Sim Racing Games",
+    2026,
+    "https://doi.org/10.48550/arxiv.2610.10061"
+   ],
+   [
+    "Force feedback drives sim racing performance: The influence of force and vibrotactile haptic feedback in simulator steering wheels",
+    2026,
+    "https://doi.org/10.34961/19333"
+   ],
+   [
+    "Explaining Driver Behavior in Sim Racing with Shannon Entropy and LLM Feedback",
+    2026,
+    "https://doi.org/10.3390/e28090960"
+   ],
+   [
+    "Telemetry-based optimisation for user training in racing simulators",
+    2017,
+    "https://doi.org/10.1109/vs-games.2017.8055808"
+   ],
+   [
+    "Comparing driving behavior of humans and autonomous driving in a professional racing simulator",
+    2021,
+    "https://doi.org/10.1371/journal.pone.0245320"
+   ],
+   [
+    "Feasibility and Validity of a Low-Cost Racing Simulator in Driving Assessment after Stroke",
+    2020,
+    "https://doi.org/10.3390/geriatrics5020035"
+   ],
+   [
+    "Hierarchical Two-Agent Reinforcement Learning for Long-Horizon Energy Optimization and Short-Horizon Navigation in Autonomous Electric Boats",
+    2026,
+    "https://doi.org/10.3390/s26227167"
+   ],
+   [
+    "Physiological responses of race car drivers in authentic and simulated motor-racing",
+    2025,
+    "https://doi.org/10.3389/fspor.2025.1498686"
+   ],
+   [
+    "Learning autonomous race driving with action mapping reinforcement learning",
+    2024,
+    "https://doi.org/10.1016/j.isatra.2024.05.010"
+   ],
+   [
+    "A Super-human Vision-based Reinforcement Learning Agent for Autonomous Racing in Gran Turismo",
+    2024,
+    "https://doi.org/10.48550/arxiv.2406.12563"
+   ],
+   [
+    "Design and assembly of a 2-DOF motion simulator for racing applications",
+    2025,
+    null
+   ],
+   [
+    "A Champion-Level Vision-Based Reinforcement Learning Agent for Competitive Racing in Gran Turismo 7",
+    2025,
+    "https://doi.org/10.1109/lra.2025.3560873"
+   ],
+   [
+    "AARK: An Open Toolkit for Autonomous Racing Research",
+    2024,
+    "https://doi.org/10.48550/arxiv.2410.00358"
+   ],
+   [
+    "Comparing and improving steering forces in a race car and race simulator to increase simulator fidelity",
+    2015,
+    null
+   ],
+   [
+    "Evaluating the Consistency of Key Performance Metrics Across Different Tracks in Sim Racing Using Machine Learning",
+    2025,
+    "https://doi.org/10.2139/ssrn.5263021"
+   ],
+   [
+    "Evaluating the Consistency of Key Performance Metrics Across Different Tracks in Sim Racing Using Machine Learning",
+    2025,
+    "https://doi.org/10.2139/ssrn.5255017"
+   ],
+   [
+    "You can’t drive my car - a method to fingerprint individual driving styles in a sim-racing setting",
+    2022,
+    "https://doi.org/10.1109/icecet55527.2022.9872663"
+   ],
+   [
+    "Assessing sim racing software for low-cost driving simulator to road geometric research",
+    2021,
+    "https://doi.org/10.1016/j.trpro.2021.11.076"
+   ],
+   [
+    "Force Feedback Drives Sim Racing Performance: The Influence of Force and Vibrotactile Haptic Feedback in Simulator Steering Wheels",
+    2025,
+    "https://doi.org/10.2139/ssrn.5392178"
+   ],
+   [
+    "Force feedback drives sim racing performance: The influence of force and vibrotactile haptic feedback in simulator steering wheels",
+    2026,
+    "https://doi.org/10.1016/j.chbr.2026.100993"
+   ],
+   [
+    "Decoding the Feeling: Investigating the Vibration Used in Sim Racing Steering Wheel Haptic Feedback",
+    2025,
+    "https://doi.org/10.3390/s25237307"
+   ],
+   [
+    "A Comparative Performance Analysis of Load Cell and Hall-Effect Brake Sensors in Sim Racing",
+    2025,
+    "https://doi.org/10.3390/s25133872"
+   ],
+   [
+    "Assessing sim racing software for low-cost driving simulator to road geometric research",
+    2021,
+    "https://doi.org/10.36443/10259/6929"
+   ]
+  ]
+ },
+ "\"racing simulator\" telemetry video": {
+  "lang": "en",
+  "count": 38,
+  "top": [
+   [
+    "Comparing driving behavior of humans and autonomous driving in a professional racing simulator",
+    2021,
+    "https://doi.org/10.1371/journal.pone.0245320"
+   ],
+   [
+    "Feasibility and Validity of a Low-Cost Racing Simulator in Driving Assessment after Stroke",
+    2020,
+    "https://doi.org/10.3390/geriatrics5020035"
+   ],
+   [
+    "TRACK: Telemetry-Based Racing Analysis and Coaching Kit in Sim Racing Games",
+    2026,
+    "https://doi.org/10.48550/arxiv.2610.10061"
+   ],
+   [
+    "Design and assembly of a 2-DOF motion simulator for racing applications",
+    2025,
+    null
+   ],
+   [
+    "AARK: An Open Toolkit for Autonomous Racing Research",
+    2024,
+    "https://doi.org/10.48550/arxiv.2410.00358"
+   ],
+   [
+    "TELEMETRY ANALYSIS IN F1 RACING SIMULATION",
+    2025,
+    "https://doi.org/10.19279/tvz.pd.2024-13-1-08"
+   ],
+   [
+    "Assessing sim racing software for low-cost driving simulator to road geometric research",
+    2021,
+    "https://doi.org/10.1016/j.trpro.2021.11.076"
+   ],
+   [
+    "Assessing sim racing software for low-cost driving simulator to road geometric research",
+    2021,
+    "https://doi.org/10.36443/10259/6929"
+   ],
+   [
+    "Construction of Driving Seat Frame and 2-Dof Motion Simulator",
+    2020,
+    "https://doi.org/10.30880/ijie.2020.12.05.019"
+   ],
+   [
+    "Learning from Demonstration with Hierarchical Policy Abstractions Toward High-Performance and Courteous Autonomous Racing",
+    2024,
+    "https://doi.org/10.48550/arxiv.2411.04735"
+   ],
+   [
+    "A Machine Learning Approach for Modeling and Analyzing of Driver Performance in Simulated Racing",
+    2023,
+    "https://doi.org/10.1007/978-3-031-26438-2_8"
+   ],
+   [
+    "Artificial Intelligence in Motorsport: A Scoping Review of Applications, Challenges, and Research Gaps",
+    2026,
+    "https://doi.org/10.14569/ijacsa.2026.01705101"
+   ],
+   [
+    "Learning-based estimation of operators’ psycho-physiological state",
+    2025,
+    "https://doi.org/10.1016/j.eswa.2025.127097"
+   ],
+   [
+    "Automotive Central Console Interface Design",
+    2019,
+    "https://doi.org/10.54941/ahfe100152"
+   ],
+   [
+    "From Dashboards to Dialogue: Evaluating a Conversational AI Coach for Performance Driving Skill Development",
+    2025,
+    "https://doi.org/10.1145/3744333.3747811"
+   ],
+   [
+    "The racer's gaze: Visual strategy in high-speed sports expertise",
+    2025,
+    "https://doi.org/10.1167/jov.25.8.16"
+   ],
+   [
+    "A Simulation Benchmark for Autonomous Racing with Large-Scale Human Data",
+    2024,
+    "https://doi.org/10.52202/079017-3240"
+   ],
+   [
+    "High Speed Wireless Optical System for Motorsport Data Loggers",
+    2019,
+    "https://doi.org/10.3390/electronics8080873"
+   ],
+   [
+    "Towards An Understanding Of Learning In Immersive Virtual Reality: Investigating Learning Affordances To Bridge Theory And Practice",
+    2026,
+    null
+   ],
+   [
+    "Game Strategy Analysis Methodology",
+    2022,
+    "https://doi.org/10.37789/rochi.2022.1.1.9"
+   ],
+   [
+    "Generative AI for Autonomous Driving: A Review",
+    2025,
+    "https://doi.org/10.48550/arxiv.2505.15863"
+   ],
+   [
+    "A Survey of Planning and Learning in Games",
+    2020,
+    "https://doi.org/10.3390/app10134529"
+   ],
+   [
+    "A Comparative Performance Analysis of Load Cell and Hall-Effect Brake Sensors in Sim Racing",
+    2025,
+    "https://doi.org/10.3390/s25133872"
+   ],
+   [
+    "Too Legit to Rage Quit: Do Social Ties Impact Staying Power in eSports?",
+    2020,
+    "https://doi.org/10.24251/hicss.2020.323"
+   ],
+   [
+    "Decoding the Feeling: Investigating the Vibration Used in Sim Racing Steering Wheel Haptic Feedback",
+    2025,
+    "https://doi.org/10.3390/s25237307"
+   ]
+  ]
+ },
+ "HUD OCR telemetry video game": {
+  "lang": "en",
+  "count": 5,
+  "top": [
+   [
+    "Visual Analysis of Computer Game Output Video Stream for Gameplay Metrics",
+    2020,
+    "https://doi.org/10.1007/978-3-030-50426-7_40"
+   ],
+   [
+    "Content Based Video Narration of Gameplay with Vision Language Models",
+    2026,
+    "https://doi.org/10.48550/arxiv.2608.14016"
+   ],
+   [
+    "DirCast: Live Esports Directing and Commentary with a Single Streaming Video-Language Model",
+    2026,
+    "https://doi.org/10.48550/arxiv.2610.31734"
+   ],
+   [
+    "Feedback-Based Gameplay Metrics and Gameplay Performance Segmentation: An audio-visual approach for assessing player experience.",
+    2014,
+    null
+   ],
+   [
+    "Long-Horizon Audio-Visual Generation for Persistent Stories and Interactive Worlds",
+    2026,
+    "https://doi.org/10.48550/arxiv.2608.23383"
+   ]
+  ]
+ },
+ "telemetry extraction onboard video OCR speed": {
+  "lang": "en",
+  "count": 41,
+  "top": [
+   [
+    "Data-Driven Detection of Hit-and-Run Truck Incidents Using Computer Vision and Telemetry",
+    2025,
+    "https://doi.org/10.22214/ijraset.2025.68938"
+   ],
+   [
+    "Design and development of an interactive autonomous monitoring and surveillance drone",
+    2020,
+    null
+   ],
+   [
+    "Recovering Origin Destination Flows from Bus CCTV: Early Results from Nairobi and Kigali",
+    2025,
+    "https://doi.org/10.48550/arxiv.2512.00424"
+   ],
+   [
+    "Risk Assessment of Artificial Intelligence-driven Threats Against Identity-Verification in Online Gambling",
+    2025,
+    null
+   ],
+   [
+    "Phoenix Team's 2015 Unmanned Autonomous System",
+    2015,
+    "https://doi.org/10.13111/2066-8201.2015.7.4.19"
+   ],
+   [
+    "Autonomous Robotics for Identification and Management of Invasive Aquatic Plant Species",
+    2019,
+    "https://doi.org/10.3390/app9122410"
+   ],
+   [
+    "Smart Enforcement of Disability Parking: A Drone-Based License Plate Recognition and Staged Optimization Framework",
+    2026,
+    "https://doi.org/10.3390/urbansci10040212"
+   ],
+   [
+    "Experiments in Agentic AI for Science",
+    2026,
+    "https://doi.org/10.48550/arxiv.2605.26305"
+   ],
+   [
+    "Interpol international forensic science managers symposium digital evidence review 2023-2025",
+    2026,
+    "https://doi.org/10.1016/j.fsisyn.2026.100702"
+   ],
+   [
+    "Building Scalable AI-Driven InsurTech Platforms for Automated Underwriting and Claims Optimization",
+    2023,
+    "https://doi.org/10.30574/wjarr.2023.20.3.2711"
+   ],
+   [
+    "The Increasing Use of Artificial Intelligence in the Process of Software Development",
+    2025,
+    null
+   ],
+   [
+    "Automatic Quadrotor Dispatch Missions Based on Air-Writing Gesture Recognition",
+    2025,
+    "https://doi.org/10.3390/pr13123984"
+   ],
+   [
+    "Real-Time Georeferencing of Fire Front Aerial Images Using Iterative Ray-Tracing and the Bearings-Range Extended Kalman Filter",
+    2022,
+    "https://doi.org/10.3390/s22031150"
+   ],
+   [
+    "RRS James Cook Cruise 165 19 May - 12 Jun 2018. Water column and seafloor time-series studies at the Porcupine Abyssal Plain Sustained Observatory",
+    2018,
+    null
+   ],
+   [
+    "Application and data modernization with generative AI & cloud Infrastructure",
+    2026,
+    "https://doi.org/10.7490/f1000research.1120551.1"
+   ],
+   [
+    "From Banal Surveillance to Function Creep: Automated License Plate Recognition (ALPR) in Denmark",
+    2022,
+    "https://doi.org/10.24908/ss.v20i3.15000"
+   ],
+   [
+    "A distributed information system prototype to detect and monitor the Hazardous Material Transport on the road in the territory of Nice-Imperia-Ventimiglia",
+    2007,
+    "https://doi.org/10.2495/safe070321"
+   ],
+   [
+    "Decentralized Infrastructure for Digital Notarizing, Signing and Sharing Files using Blockchain",
+    2026,
+    "https://doi.org/10.48550/arxiv.2601.13907"
+   ],
+   [
+    "A Review on Vibe Coding: Fundamentals, State-of-the-art, Challenges and Future Directions",
+    2025,
+    "https://doi.org/10.36227/techrxiv.174681482.27435614/v1"
+   ],
+   [
+    "Customer satisfaction in Prime Bank PLC in the digital era: a case study on retail banking services (Gulshan branch)",
+    2025,
+    null
+   ],
+   [
+    "INTERNATIONAL CONFERENCE ON HUMAN MACHINE INTERACTION IN THE DIGITAL ERA (ICHMIDE -2023)",
+    2023,
+    "https://doi.org/10.5281/zenodo.7663008"
+   ],
+   [
+    "Design requirements for operational earth resources ground data processing",
+    1972,
+    null
+   ],
+   [
+    "Remotely Piloted Aircraft Systems for Surveys of at-Risk Migratory Birds",
+    2026,
+    "https://doi.org/10.22215/etd/2026-17065"
+   ],
+   [
+    "Machine learning optimized drone based investigation of multiphysics transport phenomena on functional surfaces for thermal imaging digital twins and quality management in Industry 4.0",
+    2026,
+    "https://doi.org/10.1007/s44507-026-00008-4"
+   ],
+   [
+    "A Systematic Content Review of Artificial Intelligence and the Internet of Things Applications in Smart Home",
+    2020,
+    "https://doi.org/10.3390/app10093074"
+   ]
+  ]
+ },
+ "\"cloud gaming\" \"racing\" driver data": {
+  "lang": "en",
+  "count": 58,
+  "top": [
+   [
+    "Cloud-gaming: Analysis of Google Stadia traffic",
+    2022,
+    "https://doi.org/10.1016/j.comcom.2022.03.006"
+   ],
+   [
+    "Foveated video streaming for cloud gaming",
+    2017,
+    "https://doi.org/10.1109/mmsp.2017.8122235"
+   ],
+   [
+    "Measuring and estimating Key Quality Indicators in Cloud Gaming services",
+    2023,
+    "https://doi.org/10.1016/j.comnet.2023.109808"
+   ],
+   [
+    "User Preferences for Video Game Delivery - A Case Study of Cloud Gaming",
+    2015,
+    null
+   ],
+   [
+    "Design, Implementation and Evaluation of a Distributed Mobile Cloud Gaming System",
+    2014,
+    null
+   ],
+   [
+    "A Benchmarking Framework for Interactive 3D Applications in the Cloud",
+    2020,
+    "https://doi.org/10.1109/micro50266.2020.00076"
+   ],
+   [
+    "Anomaly Detection and Root Cause Diagnosis for Low-Latency Applications in Time-Varying Capacity Networks",
+    2025,
+    "https://doi.org/10.70675/6799e73bz7575z43fbz97f4z865ce6f35c4c"
+   ],
+   [
+    "A Plug-Loads Game Changer: Computer Gaming Energy Efficiency without Performance Compromise",
+    2019,
+    "https://doi.org/10.2172/2274683"
+   ],
+   [
+    "Hajautetun pilvipelaamisen mobiililaitteilla mahdollistavan järjestelmän suunnittelu, toteutus ja arviointi",
+    2014,
+    null
+   ],
+   [
+    "An Analysis of Gaming Industry in India",
+    2021,
+    "https://doi.org/10.21275/sr21520124120"
+   ],
+   [
+    "Efficient Identification of Cloud Gaming Traffic at the Edge",
+    2023,
+    "https://doi.org/10.1109/noms56928.2023.10154417"
+   ],
+   [
+    "Quantifying User Satisfaction in Mobile Cloud Games",
+    2014,
+    "https://doi.org/10.1145/2579465.2579468"
+   ],
+   [
+    "Equity research: how sustainable is Nintendo’srecovery?",
+    2020,
+    null
+   ],
+   [
+    "Network resource optimization in cloud computing environments",
+    2021,
+    "https://doi.org/10.12681/eadd/48819"
+   ],
+   [
+    "The Role of 5G Technologies in a Smart City: The Case for Intelligent Transportation System",
+    2021,
+    "https://doi.org/10.3390/su13095188"
+   ],
+   [
+    "An Analysis of Physiological and Psychological Responses in Virtual Reality and Flat Screen Gaming",
+    2024,
+    "https://doi.org/10.1109/taffc.2024.3368703"
+   ],
+   [
+    "What the Fog? Edge Computing Revisited: Promises, Applications and Future Challenges",
+    2019,
+    "https://doi.org/10.1109/access.2019.2948399"
+   ],
+   [
+    "ROLE OF 5G WIRELESS SYSTEMS IN FUTURE",
+    2022,
+    "https://doi.org/10.55041/ijsrem13225"
+   ],
+   [
+    "GAMORRA: An API-level workload model for rasterization-based graphics pipeline architecture",
+    2022,
+    "https://doi.org/10.1016/j.cag.2022.05.007"
+   ],
+   [
+    "Viiveen aiheuttajat WebRTC-pohjaisessa etäohjausjärjestelmässä",
+    2021,
+    null
+   ],
+   [
+    "Pruning Edge Research with Latency Shears",
+    2020,
+    "https://doi.org/10.1145/3422604.3425943"
+   ],
+   [
+    "An API-Level Frame Workload Model for Real-Time Rendering Applications",
+    2020,
+    "https://doi.org/10.36227/techrxiv.12278666"
+   ],
+   [
+    "Lower is Better? The Effects of Local Latencies on Competitive First-Person Shooter Game Players",
+    2021,
+    "https://doi.org/10.1145/3411764.3445245"
+   ],
+   [
+    "All One Needs to Know about Metaverse: A Complete Survey on Technological Singularity, Virtual Ecosystem, and Research Agenda",
+    2024,
+    "https://doi.org/10.1561/1100000095"
+   ],
+   [
+    "Value co-creation in gaming the industry: A qualitative research on virtual discussion forums",
+    2014,
+    null
+   ]
+  ]
+ },
+ "telemetria \"jogos em nuvem\"": {
+  "lang": "pt",
+  "count": 1,
+  "top": [
+   [
+    "NICHOS EM INOVAÇÃO DISRUPTIVA DE INTERESSE DA DEFESA NO BRASIL: OPORTUNIDADES E DESAFIOS",
+    2022,
+    null
+   ]
+  ]
+ },
+ "telemetria \"simulador de corrida\"": {
+  "lang": "pt",
+  "count": 0,
+  "top": []
+ },
+ "telemetria vídeo OCR velocidade": {
+  "lang": "pt",
+  "count": 9,
+  "top": [
+   [
+    "Identificação dinamica longitudinal de um dirigivel robotico autonomo",
+    2005,
+    "https://doi.org/10.47749/t/unicamp.2005.335805"
+   ],
+   [
+    "Sistema de monitorização de consumo de água utilizando tecnologia Sigfox",
+    2017,
+    "https://doi.org/10.34626/m3ng-bs97"
+   ],
+   [
+    "APRENDIZADO AUTO-SUPERVISIONADO PARA EXPLORAÇÃO DE DADOS NÃO ESTRUTURADOS: NOVAS FRONTEIRAS DA INTELIGÊNCIA ARTIFICIAL ESCALÁVEL",
+    2026,
+    "https://doi.org/10.70773/revistatopicos/783480421"
+   ],
+   [
+    "Reconhecimento de dígitos em imagens de medidores de consumo de gás natural utilizando técnicas de visão computacional",
+    2016,
+    null
+   ],
+   [
+    "Indústria 4.0 Soluções tecnológicas viáveis baseadas em Internet das Coisas e Inteligência Artificial",
+    2026,
+    "https://doi.org/10.51795/9786526531730"
+   ],
+   [
+    "Do Big Data ao conhecimento organizacional: Limites e possibilidades da inteligência artificial na governança corporativa",
+    2025,
+    "https://doi.org/10.33448/rsd-v14i9.49560"
+   ],
+   [
+    "Diseño de protección de sistemas de seguridad pasiva en edificios",
+    2017,
+    null
+   ],
+   [
+    "A tecnologia da informação e comunicações em apoio à atividade de inteligência de segurança pública – um estudo bibliográfico",
+    2024,
+    null
+   ],
+   [
+    "Las nuevas tecnologías y el seguro : big data, blockchain, open insurance, inteligencia artificial, sandbox e insurtech",
+    2022,
+    null
+   ]
+  ]
+ },
+ "\"computação em nuvem\" jogos telemetria piloto": {
+  "lang": "pt",
+  "count": 7,
+  "top": [
+   [
+    "Educação 4.0 no ensino militar: utopia ou necessidade?",
+    2021,
+    "https://doi.org/10.33448/rsd-v10i10.18867"
+   ],
+   [
+    "Aplicações em redes de sensores na área da saúde e gerenciamento de dados médicos: tecnologias em ascensão",
+    2020,
+    "https://doi.org/10.5753/sbc.4710.8.4"
+   ],
+   [
+    "NT - 90 - Diset - Situação Atual e Perspectivas Dos Serviços e Tecnologias Associadas ao 5G Na Europa: Internet Das Coisas (Iot), Indústria 4.0",
+    2021,
+    "https://doi.org/10.38116/ntcepaldiset90"
+   ],
+   [
+    "A ergonomia na abordagem da indústria 4.0 : o futuro das interações homem-máquina",
+    2021,
+    "https://doi.org/10.11606/003108475"
+   ],
+   [
+    "Interações espaciais entre Brasil e China : datificação de sistemas agroalimentares e o papel geoeconômico de Mato Grosso",
+    2026,
+    null
+   ],
+   [
+    "Os efeitos da utilização do Big Data na inteligência competitiva",
+    2018,
+    null
+   ],
+   [
+    "Revista do Clube Naval",
+    2022,
+    null
+   ]
+  ]
+ },
+ "arXiv all:\"cloud gaming\" AND all:telemetry": {
+  "lang": "en",
+  "count": null,
+  "top": []
+ },
+ "arXiv all:\"sim racing\"": {
+  "lang": "en",
+  "count": null,
+  "top": []
+ },
+ "arXiv all:racing AND all:HUD AND all:OCR": {
+  "lang": "en",
+  "count": null,
+  "top": []
+ },
+ "arXiv all:telemetry AND all:video AND all:OCR": {
+  "lang": "en",
+  "count": null,
+  "top": []
+ }
+}

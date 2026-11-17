@@ -1,72 +1,65 @@
 @startuml diagrama-sequencia
 skinparam shadowing false
-skinparam dpi 130
+skinparam dpi 120
 skinparam backgroundColor white
 skinparam sequenceMessageAlign left
 skinparam responseMessageBelowArrow true
 
-title Diagrama de sequência — processamento de um vídeo
+title Diagrama de sequência — processamento de um vídeo (versão revisada)
 
 actor Piloto
 participant "leitor.py" as L
 participant "cv.VideoCapture" as Cap
 participant "OpenCV" as CV
-participant "EasyOCR\nReader(pt, en)" as OCR
+participant "EasyOCR\n(pt, en)" as OCR
+participant "EasyOCR\n(en)" as OCRC
+participant "DetectorVoltas" as DV
+participant "pistas.json" as PJ
 participant "NumPy" as NP
 participant "Matplotlib" as PLT
 
-Piloto -> L: --video, --config, --confianca
+Piloto -> L: python leitor.py ~--video gravacao.mp4 ~--pista fuji ~--saida-voltas saida
 activate L
-L -> L: escolhe o preset ou o JSON
-L -> OCR: cria o leitor
-L -> Cap: VideoCapture(video)
-activate Cap
-L -> Cap: CAP_PROP_FPS
-Cap --> L: fps, ou 30 se inválido
-L -> L: dt = 1/fps
+L -> PJ: comprimento de "fuji"
+PJ --> L: 4.563 m (sem pista: erro e fim)
+L -> OCR: cria o leitor da velocidade
+L -> Cap: VideoCapture(vídeo); CAP_PROP_FPS
+L -> OCRC: cria o leitor do cronômetro
+L -> DV: cria o detector (passo 5)
 
 loop a cada quadro
   Cap --> L: ret, frame
-  L -> CV: cvtColor(frame, COLOR_BGR2HSV)
-  CV --> L: frameHSV
-  L -> CV: inRange verde no recorte do preset
-  CV --> L: máscara do acelerador
-  L -> CV: countNonZero(máscara do acelerador)
-  CV --> L: pixels do acelerador
-  L -> NP: append(acelerador)
-  L -> CV: inRange rosa HSV até matiz 179
-  CV --> L: máscara do freio
-  L -> CV: countNonZero(máscara do freio)
-  CV --> L: pixels do freio
-  L -> NP: append(freio)
-  L -> CV: recorte da velocidade em RGB
-  CV --> L: roi da velocidade
-  L -> OCR: readtext(roi)
+  L -> CV: cvtColor, inRange verde e rosa, countNonZero
+  CV --> L: pixels do acelerador e do freio
+  L -> OCR: readtext(recorte da velocidade)
   OCR --> L: (bbox, texto, confiança)
-  L -> L: se confiança > limiar e texto.isdigit(),\nvelocidade = int(texto);\nsem aceite, a velocidade permanece
-  L -> L: distancia += (velocidade / 3.6) * dt
-  L -> NP: append(distancia_total)
+  L -> L: filtro: dígitos, confiança > 0,5,\n0–400 km/h, salto ≤ 15 km/h/quadro;\nstatus do quadro
+  L -> L: distancia += (velocidade / 3,6) / fps
+  opt quadro múltiplo de 5
+    L -> OCRC: tempo "Atual" (e nº da volta)
+    OCRC --> L: tempo em segundos
+    L -> DV: amostra(quadro, tempo)
+    DV --> L: evento (início, fim ou nenhum)
+    opt fim de volta
+      L -> OCRC: refinar o limite quadro a quadro
+      L -> DV: fechar(limite)
+      DV --> L: ausência máxima, pausa, nº da volta
+      alt volta válida
+        L -> NP: percentil 99 do trecho
+        L -> L: distância × (comprimento / distância da volta);\nerro %, aviso se > 5%
+        L -> L: grava volta_seqNN_hudMM.csv
+      else inválida
+        L -> L: registra o motivo, sem arquivo
+      end
+    end
+  end
 end
-L -> Cap: release()
-deactivate Cap
 
-L -> NP: max(acelerador)
-NP --> L: máximo do acelerador
-L -> L: acelerador = (valor / máximo) * 100
-L -> PLT: plot(distancia_total, acelerador, verde)
-L -> NP: max(freio)
-NP --> L: máximo do freio
-L -> L: freio = (valor / máximo) * 100
-L -> PLT: plot(distancia_total, freio, vermelho)
-L -> PLT: dark_background, fill_between,\ngrade, título e eixos
-alt headless
-  L -> PLT: savefig(png)
-else janela
-  L -> PLT: show()
-  PLT --> Piloto: janela do gráfico
-end
-opt csv pedido
-  L -> L: grava tempo, distância,\nvelocidade e percentuais
-end
+L -> Cap: release()
+L -> L: grava voltas.csv; aviso se um recorte\nnão teve nenhum pixel da cor (RNF07)
+L -> NP: percentil 99 de cada série
+L -> L: percentual = min(100, pixels / p99 × 100)
+L -> PLT: gráfico (janela, ou PNG com --headless)
+PLT --> Piloto: gráfico de telemetria
 deactivate L
 @enduml

@@ -1,4 +1,4 @@
-# Dependências diretas de leitor.py (verificadas com Python 3.12).
+# Dependências diretas de leitor.py (verificadas com Python 3.13, versão usada na avaliação do TCC).
 # matplotlib e easyocr são importados pelo script e passam a ser declarados aqui.
 #
 # opencv-python-headless fornece o módulo cv2 na mesma linha 4.13.0.92 que já

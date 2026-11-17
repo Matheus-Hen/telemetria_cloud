@@ -1,5 +1,7 @@
 # Diagramas UML do leitor de telemetria
 
+> **Atualização (nov. 2026):** as figuras e os `.puml` desta pasta foram refeitos para a versão revisada (recorte do freio sem a pista, normalização p99, filtro do OCR, separação de voltas pelo cronômetro com gravação por volta e regra de invalidação, aviso de recorte sem cor e comprimento obrigatório da pista, RF11). Os parágrafos abaixo descrevem a primeira versão; o texto atualizado de cada diagrama está na seção de modelagem do TCC.
+
 As quatro figuras desta pasta foram desenhadas a partir de `leitor.py`. Cada seção traz a imagem e, em seguida, um parágrafo que pode ser copiado para o capítulo de Metodologia. A numeração (Figura X) fica a cargo do texto do TCC. Sugestão de crédito sob a figura, porque o desenho é de autoria do trabalho: **Elaborada pelo autor.**
 
 O script é procedural. O diagrama de classes não descreve classes declaradas no código; ele organiza os dados e as responsabilidades que o script exerce. Essa ressalva está no parágrafo correspondente e também na própria figura.
@@ -26,4 +28,4 @@ O diagrama de sequência mostra uma execução completa, na ordem das chamadas d
 
 ![Diagrama de atividades de leitor.py](diagrama-atividades.png)
 
-O diagrama de atividades descreve o mesmo fluxo como um procedimento único. A execução escolhe o preset, prepara o leitor OCR, abre o vídeo, lê a taxa e zera velocidade e distância. Enquanto há quadro, o script mascara e conta o verde e o rosa, reconhece a velocidade e decide se atualiza o inteiro ou se o conserva. A distância daquele quadro usa `1/fps`. Ao fim das leituras o arquivo é liberado, cada série vira percentual do próprio máximo e as curvas são traçadas. A execução headless grava o PNG; caso contrário a janela permanece aberta até ser fechada. Se o CSV foi pedido, a série é gravada em seguida. A figura registra que o percentual é o pico da gravação e que o arco vermelho de RPM pode contaminar a máscara do freio.
+O diagrama de atividades descreve o mesmo fluxo como um procedimento único. A execução escolhe o preset, prepara o leitor OCR, abre o vídeo, lê a taxa e zera velocidade e distância. Enquanto há quadro, o script mascara e conta o verde e o rosa, reconhece a velocidade e decide se atualiza o inteiro ou se o conserva. A distância daquele quadro usa `1/fps`. Ao fim das leituras o arquivo é liberado, cada série vira percentual do próprio máximo e as curvas são traçadas. A execução headless grava o PNG; caso contrário a janela permanece aberta até ser fechada. Se o CSV foi pedido, a série é gravada em seguida. A figura registra que o percentual é o pico da gravação. No preset de 1280×720 a contaminação do freio vinha da zebra acima do dial; no HUD padrão de 1080p, o arco vermelho de RPM pode entrar na faixa rosa.

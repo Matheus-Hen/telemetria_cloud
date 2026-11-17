@@ -1,0 +1,119 @@
+{
+  "_descricao": "Comprimento oficial de cada circuito do Le Mans Ultimate, em metros, conforme a ficha \"Circuit Details\" da página do circuito no site oficial do jogo (consultada em 17/11/2026). Traçados alternativos (por exemplo, Fuji Classic, Bahrain Outer, Sebring School) não constam das páginas oficiais e ficaram de fora; para eles, use --comprimento-pista METROS.",
+  "pistas": {
+    "fuji": {
+      "nome": "Fuji Speedway",
+      "tracado": "principal",
+      "comprimento_m": 4563,
+      "fonte": "https://lemansultimate.com/circuit/fuji/",
+      "observacao": "Traçado principal, usado no TCC. O LMU também tem o Fuji Classic (sem a chicane), cujo comprimento não consta da página oficial."
+    },
+    "bahrain": {
+      "nome": "Bahrain International Circuit",
+      "tracado": "principal",
+      "comprimento_m": 5412,
+      "fonte": "https://lemansultimate.com/circuit/bahrain/"
+    },
+    "barcelona": {
+      "nome": "Circuit de Barcelona-Catalunya",
+      "tracado": "principal",
+      "comprimento_m": 4657,
+      "fonte": "https://lemansultimate.com/circuit/circuit-de-barcelona-catalunya/"
+    },
+    "le-mans": {
+      "nome": "Circuit de la Sarthe (Le Mans)",
+      "tracado": "principal",
+      "comprimento_m": 13626,
+      "fonte": "https://lemansultimate.com/circuit/circuit-de-la-sarthe/",
+      "observacao": "O LMU também tem o traçado Mulsanne, cujo comprimento não consta da página oficial."
+    },
+    "paul-ricard": {
+      "nome": "Circuit Paul Ricard",
+      "tracado": "traçado da página oficial (13 curvas)",
+      "comprimento_m": 5770,
+      "fonte": "https://lemansultimate.com/circuit/circuit-paul-ricard/",
+      "observacao": "O LMU tem vários traçados de Paul Ricard; a página oficial não diz a qual se refere o comprimento. Para outro traçado, use --comprimento-pista."
+    },
+    "cota": {
+      "nome": "Circuit of the Americas",
+      "tracado": "principal",
+      "comprimento_m": 5514,
+      "fonte": "https://lemansultimate.com/circuit/cota/"
+    },
+    "daytona": {
+      "nome": "Daytona International Speedway",
+      "tracado": "principal",
+      "comprimento_m": 5740,
+      "fonte": "https://lemansultimate.com/circuit/daytona-international-speedway/",
+      "observacao": "A página oficial informa \"3.56 miles / 5.74km\" (duas casas decimais; 3,56 mi ≈ 5.729 m)."
+    },
+    "imola": {
+      "nome": "Autodromo Enzo e Dino Ferrari (Imola)",
+      "tracado": "principal",
+      "comprimento_m": 4909,
+      "fonte": "https://lemansultimate.com/circuit/imola/"
+    },
+    "interlagos": {
+      "nome": "Autódromo José Carlos Pace (Interlagos)",
+      "tracado": "principal",
+      "comprimento_m": 4314,
+      "fonte": "https://lemansultimate.com/circuit/interlagos/",
+      "observacao": "A ficha da página oficial diz 4.314 km; o texto da mesma página cita 4.309 km."
+    },
+    "lusail": {
+      "nome": "Lusail International Circuit",
+      "tracado": "principal",
+      "comprimento_m": 5419,
+      "fonte": "https://lemansultimate.com/circuit/lusail-international/",
+      "observacao": "A ficha da página oficial diz 5.419 km; o texto da mesma página cita 5.38 km."
+    },
+    "road-atlanta": {
+      "nome": "Michelin Raceway Road Atlanta",
+      "tracado": "principal",
+      "comprimento_m": 4088,
+      "fonte": "https://lemansultimate.com/circuit/michelin-raceway-road-atlanta/"
+    },
+    "monza": {
+      "nome": "Autodromo Nazionale Monza",
+      "tracado": "principal",
+      "comprimento_m": 5793,
+      "fonte": "https://lemansultimate.com/circuit/monza/"
+    },
+    "portimao": {
+      "nome": "Algarve International Circuit (Portimão)",
+      "tracado": "principal",
+      "comprimento_m": 4653,
+      "fonte": "https://lemansultimate.com/circuit/portimao/"
+    },
+    "sebring": {
+      "nome": "Sebring International Raceway",
+      "tracado": "principal",
+      "comprimento_m": 6019,
+      "fonte": "https://lemansultimate.com/circuit/sebring/"
+    },
+    "silverstone": {
+      "nome": "Silverstone",
+      "tracado": "principal",
+      "comprimento_m": 5891,
+      "fonte": "https://lemansultimate.com/circuit/silverstone-international/"
+    },
+    "spa": {
+      "nome": "Circuit de Spa-Francorchamps",
+      "tracado": "principal",
+      "comprimento_m": 7004,
+      "fonte": "https://lemansultimate.com/circuit/spa/"
+    },
+    "long-beach": {
+      "nome": "Streets of Long Beach",
+      "tracado": "principal",
+      "comprimento_m": 3167,
+      "fonte": "https://lemansultimate.com/circuit/streets-of-long-beach-circuit/"
+    },
+    "laguna-seca": {
+      "nome": "WeatherTech Raceway Laguna Seca",
+      "tracado": "principal",
+      "comprimento_m": 3602,
+      "fonte": "https://lemansultimate.com/circuit/weathertech-raceway-laguna-seca/"
+    }
+  }
+}
